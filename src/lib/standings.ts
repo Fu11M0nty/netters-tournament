@@ -1,0 +1,103 @@
+import type { Match, StandingRow, Team } from './types'
+
+export function pointsForMatch(
+  homeScore: number,
+  awayScore: number
+): { home: number; away: number } {
+  if (homeScore === awayScore) return { home: 3, away: 3 }
+  const homeWon = homeScore > awayScore
+  const winnerScore = homeWon ? homeScore : awayScore
+  const loserScore = homeWon ? awayScore : homeScore
+  const loserBonus = loserScore * 2 > winnerScore ? 1 : 0
+  return homeWon
+    ? { home: 5, away: loserBonus }
+    : { home: loserBonus, away: 5 }
+}
+
+export function calculateStandings(
+  teams: Team[],
+  matches: Match[]
+): StandingRow[] {
+  const stats = new Map<
+    string,
+    {
+      team: Team
+      played: number
+      won: number
+      drawn: number
+      lost: number
+      goals_for: number
+      goals_against: number
+      points: number
+    }
+  >()
+
+  for (const team of teams) {
+    stats.set(team.id, {
+      team,
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      goals_for: 0,
+      goals_against: 0,
+      points: 0,
+    })
+  }
+
+  for (const match of matches) {
+    if (match.status !== 'completed') continue
+    if (match.home_score === null || match.away_score === null) continue
+
+    const home = stats.get(match.home_team_id)
+    const away = stats.get(match.away_team_id)
+    if (!home || !away) continue
+
+    home.played += 1
+    away.played += 1
+    home.goals_for += match.home_score
+    home.goals_against += match.away_score
+    away.goals_for += match.away_score
+    away.goals_against += match.home_score
+
+    const pts = pointsForMatch(match.home_score, match.away_score)
+    home.points += pts.home
+    away.points += pts.away
+
+    if (match.home_score === match.away_score) {
+      home.drawn += 1
+      away.drawn += 1
+    } else if (match.home_score > match.away_score) {
+      home.won += 1
+      away.lost += 1
+    } else {
+      away.won += 1
+      home.lost += 1
+    }
+  }
+
+  const rows = Array.from(stats.values()).map((s) => {
+    const goal_difference = s.goals_for - s.goals_against
+    return {
+      team: s.team,
+      played: s.played,
+      won: s.won,
+      drawn: s.drawn,
+      lost: s.lost,
+      goals_for: s.goals_for,
+      goals_against: s.goals_against,
+      goal_difference,
+      points: s.points,
+    }
+  })
+
+  rows.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points
+    if (b.goal_difference !== a.goal_difference)
+      return b.goal_difference - a.goal_difference
+    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for
+    return a.team.name.localeCompare(b.team.name)
+  })
+
+  return rows.map((row, i) => ({ position: i + 1, ...row }))
+}
