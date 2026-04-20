@@ -34,7 +34,7 @@ export default function FixtureCard({
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 px-4 pt-4 pb-3 sm:gap-4">
         {/* Home */}
         <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-          <TeamLogo team={homeTeam} size="lg" />
+          <TeamLogo team={homeTeam} size="md" />
           <p
             className="w-full min-w-0 line-clamp-2 break-words text-sm font-medium leading-tight text-zinc-700 dark:text-zinc-300"
             title={homeTeam.name}
@@ -55,7 +55,7 @@ export default function FixtureCard({
 
         {/* Away */}
         <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-          <TeamLogo team={awayTeam} size="lg" />
+          <TeamLogo team={awayTeam} size="md" />
           <p
             className="w-full min-w-0 line-clamp-2 break-words text-sm font-medium leading-tight text-zinc-700 dark:text-zinc-300"
             title={awayTeam.name}
