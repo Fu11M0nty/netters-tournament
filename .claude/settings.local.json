@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk -F',' 'NR>1 && $1==\"Under 10'\\\\''s\"' /c/Users/Bav/ClaudeCode-Tutorial/Test-Netters-Website/data/saturday_schedule.csv)",
+      "Bash(awk -F',' 'NR>1 && $1==\"Under 14'\\\\''s\"' /c/Users/Bav/ClaudeCode-Tutorial/Test-Netters-Website/data/saturday_schedule.csv)",
+      "Bash(tee /tmp/dev.log)"
+    ]
+  }
+}

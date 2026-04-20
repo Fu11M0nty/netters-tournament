@@ -5,10 +5,17 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import AdminMatchList from '@/components/AdminMatchList'
 import AdminTeamList from '@/components/AdminTeamList'
+import AdminFixtureMatrix from '@/components/AdminFixtureMatrix'
 import { createClient } from '@/lib/supabase'
 import type { AgeGroup, Day, Match, Team } from '@/lib/types'
 
-type AdminView = 'matches' | 'teams'
+type AdminView = 'matches' | 'matrix' | 'teams'
+
+const VIEW_LABELS: Record<AdminView, string> = {
+  matches: 'Matches',
+  matrix: 'Matrix',
+  teams: 'Teams',
+}
 
 export default function AdminPage() {
   const router = useRouter()
@@ -208,7 +215,7 @@ export default function AdminPage() {
                 aria-label="Admin view"
                 className="inline-flex rounded-md border border-zinc-300 bg-white p-0.5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
               >
-                {(['matches', 'teams'] as AdminView[]).map((v) => {
+                {(['matches', 'matrix', 'teams'] as AdminView[]).map((v) => {
                   const active = view === v
                   return (
                     <button
@@ -223,7 +230,7 @@ export default function AdminPage() {
                           : 'rounded px-3 py-1 text-xs font-semibold text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
                       }
                     >
-                      {v === 'matches' ? 'Matches' : 'Teams'}
+                      {VIEW_LABELS[v]}
                     </button>
                   )
                 })}
@@ -240,6 +247,8 @@ export default function AdminPage() {
                 ageGroupName={currentGroup.name}
                 onSaved={loadMatches}
               />
+            ) : view === 'matrix' ? (
+              <AdminFixtureMatrix teams={teams} matches={matches} />
             ) : (
               <AdminTeamList
                 teams={teams}
