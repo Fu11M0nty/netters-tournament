@@ -27,11 +27,20 @@ export default function AdminFixtureMatrix({
     [teams]
   )
 
-  const matchByPair = useMemo(() => {
-    const map = new Map<string, Match>()
+  const matchesByPair = useMemo(() => {
+    const map = new Map<string, Match[]>()
     for (const m of matches) {
       const key = [m.home_team_id, m.away_team_id].sort().join('|')
-      map.set(key, m)
+      const arr = map.get(key) ?? []
+      arr.push(m)
+      map.set(key, arr)
+    }
+    for (const arr of map.values()) {
+      arr.sort(
+        (a, b) =>
+          new Date(a.kickoff_time).getTime() -
+          new Date(b.kickoff_time).getTime()
+      )
     }
     return map
   }, [matches])
@@ -96,12 +105,16 @@ export default function AdminFixtureMatrix({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-600 dark:text-zinc-400">
         <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 animate-pulse rounded-sm bg-fuchsia-300 ring-1 ring-fuchsia-500 dark:bg-fuchsia-900 dark:ring-fuchsia-600" />
+          Duplicate fixture — same pair scheduled more than once
+        </span>
+        <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-sm bg-red-200 ring-1 ring-red-400 dark:bg-red-900 dark:ring-red-700" />
           Court/time conflict with another fixture
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-sm bg-amber-200 ring-1 ring-amber-400 dark:bg-amber-900 dark:ring-amber-700" />
-          Team scheduled back-to-back (within 30 min)
+          Team scheduled back-to-back (within 20 min)
         </span>
       </div>
       <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -153,8 +166,8 @@ export default function AdminFixtureMatrix({
                   )
                 }
                 const key = [row.id, col.id].sort().join('|')
-                const match = matchByPair.get(key)
-                if (!match) {
+                const pairMatches = matchesByPair.get(key) ?? []
+                if (pairMatches.length === 0) {
                   return (
                     <td
                       key={col.id}
@@ -164,28 +177,44 @@ export default function AdminFixtureMatrix({
                     </td>
                   )
                 }
+                const match = pairMatches[0]
+                const duplicate = pairMatches.length > 1
                 const completed = match.status === 'completed'
-                const courtClash = courtConflictIds.has(match.id)
-                const backToBack = backToBackIds.has(match.id)
+                const anyCourtClash = pairMatches.some((m) => courtConflictIds.has(m.id))
+                const anyBackToBack = pairMatches.some((m) => backToBackIds.has(m.id))
                 const baseCell = 'border-b border-zinc-200 px-2 py-2 text-center dark:border-zinc-800'
-                const colorClass = courtClash
-                  ? 'bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200'
-                  : backToBack
-                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
-                    : completed
-                      ? 'text-emerald-700 dark:text-emerald-400'
-                      : 'text-zinc-700 dark:text-zinc-300'
+                const colorClass = duplicate
+                  ? 'animate-pulse bg-fuchsia-200 text-fuchsia-900 dark:bg-fuchsia-900/70 dark:text-fuchsia-100'
+                  : anyCourtClash
+                    ? 'bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200'
+                    : anyBackToBack
+                      ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
+                      : completed
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-zinc-700 dark:text-zinc-300'
                 const titleParts = [`${row.name} vs ${col.name}`]
-                if (courtClash) titleParts.push('Court/time conflict with another fixture')
-                if (backToBack) titleParts.push('Back-to-back match for one of the teams')
+                if (duplicate) {
+                  titleParts.push(
+                    `Duplicate: ${pairMatches.length} fixtures scheduled (${pairMatches
+                      .map((m) => formatKickoff(m.kickoff_time) + (m.court ? ` ${m.court}` : ''))
+                      .join(', ')})`
+                  )
+                }
+                if (anyCourtClash) titleParts.push('Court/time conflict with another fixture')
+                if (anyBackToBack) titleParts.push('Back-to-back match for one of the teams')
                 return (
                   <td
                     key={col.id}
                     title={titleParts.join(' — ')}
                     className={`${baseCell} ${colorClass}`}
                   >
-                    <div className="font-semibold tabular-nums">
-                      {formatKickoff(match.kickoff_time)}
+                    <div className="flex items-center justify-center gap-1 font-semibold tabular-nums">
+                      <span>{formatKickoff(match.kickoff_time)}</span>
+                      {duplicate && (
+                        <span className="rounded-sm bg-fuchsia-600 px-1 text-[10px] font-bold text-white">
+                          ×{pairMatches.length}
+                        </span>
+                      )}
                     </div>
                     {match.court && (
                       <div className="text-[10px] opacity-80">

@@ -77,7 +77,7 @@ const tournament = {
     date: '2026-04-26',
     ageGroups: [
       {
-        name: 'U12',
+        name: "Under 12's",
         displayOrder: 1,
         court: 'Court 1',
         start: '09:00',
@@ -87,7 +87,7 @@ const tournament = {
         ],
       },
       {
-        name: 'U13',
+        name: "Under 13's",
         displayOrder: 2,
         court: 'Court 2',
         start: '09:00',
@@ -97,7 +97,7 @@ const tournament = {
         ],
       },
       {
-        name: 'U14',
+        name: "Under 14's",
         displayOrder: 3,
         court: 'Court 3',
         start: '09:00',
@@ -107,7 +107,7 @@ const tournament = {
         ],
       },
       {
-        name: 'U15',
+        name: "Under 15's",
         displayOrder: 4,
         court: 'Court 4',
         start: '09:00',
@@ -125,42 +125,57 @@ const tournament = {
 // lower-cased CSV spelling, right side is the canonical roster name.
 // ---------------------------------------------------------------------------
 
+// Aliases are scoped per day because Saturday and Sunday share age-group names
+// ("Under 12's" etc.) but have different rosters.
 const ALIASES = {
-  "Under 10's": {
-    'sarum': 'Sarum Hall School',
+  saturday: {
+    "Under 10's": {
+      'sarum': 'Sarum Hall School',
+    },
+    "Under 11's": {
+      'market h wildcats': 'Market Harborough Wildcats U11',
+      'lyndon centre sapphires': 'Lyndon Centre Sapphires U11',
+      'lyndon centres sapphires': 'Lyndon Centre Sapphires U11',
+      'lundin centre sapphires': 'Lyndon Centre Sapphires U11',
+      'hertford': 'Hertford Hornets',
+    },
+    "Under 12's": {
+      'durhan': 'Durham',
+      'little sutton ice': 'Little Sutton Ice',
+      'lyndon corals': 'Lyndon Centre Corals U12',
+      // CSV typo: "Lyndon Crystals" appears in U12 rows but no U12 Crystals
+      // exists; organiser confirmed this was meant to be Corals.
+      'lyndon crystals': 'Lyndon Centre Corals U12',
+      'bb stars': 'BB U12 Stars',
+    },
+    "Under 13's": {
+      'lyndon emeralds': 'Lyndon Centre Emeralds U13',
+      'bb sparklers': 'BB U13 Sparklers',
+      'rv leapers': 'Rv Leapers',
+      'olney galxy': 'Olney Galaxy',
+    },
+    "Under 14's": {
+      'jms white': "JM's White",
+      'lyndon gems': 'Lyndon Centre Gems U14',
+      'market h rockets': 'MH Rockets',
+    },
+    "Under 15's": {
+      'duraham': 'Durham',
+      'lyndon crystals': 'Lyndon Centre Crystals U15',
+      'market h lunars': 'Market Harborough Lunars U15',
+      'market h lunas': 'Market Harborough Lunars U15',
+    },
   },
-  "Under 11's": {
-    'market h wildcats': 'Market Harborough Wildcats U11',
-    'lyndon centre sapphires': 'Lyndon Centre Sapphires U11',
-    'lyndon centres sapphires': 'Lyndon Centre Sapphires U11',
-    'lundin centre sapphires': 'Lyndon Centre Sapphires U11',
-    'hertford': 'Hertford Hornets',
-  },
-  "Under 12's": {
-    'durhan': 'Durham',
-    'little sutton ice': 'Little Sutton Ice',
-    'lyndon corals': 'Lyndon Centre Corals U12',
-    // CSV typo: "Lyndon Crystals" appears in U12 rows but no U12 Crystals
-    // exists; organiser confirmed this was meant to be Corals.
-    'lyndon crystals': 'Lyndon Centre Corals U12',
-    'bb stars': 'BB U12 Stars',
-  },
-  "Under 13's": {
-    'lyndon emeralds': 'Lyndon Centre Emeralds U13',
-    'bb sparklers': 'BB U13 Sparklers',
-    'rv leapers': 'Rv Leapers',
-    'olney galxy': 'Olney Galaxy',
-  },
-  "Under 14's": {
-    'jms white': "JM's White",
-    'lyndon gems': 'Lyndon Centre Gems U14',
-    'market h rockets': 'MH Rockets',
-  },
-  "Under 15's": {
-    'duraham': 'Durham',
-    'lyndon crystals': 'Lyndon Centre Crystals U15',
-    'market h lunars': 'Market Harborough Lunars U15',
-    'market h lunas': 'Market Harborough Lunars U15',
+  sunday: {
+    "Under 12's": {
+      'turnford yellows': 'Turnford Yellow',
+    },
+    "Under 14's": {
+      'turnford black': 'Turnford NC Black',
+    },
+    "Under 15's": {
+      'migic': 'Magic',
+    },
   },
 }
 
@@ -218,10 +233,12 @@ function esc(s) {
 }
 
 function parseDdmmyyyy(s) {
-  // "25/04/2026 09:00" -> "2026-04-25 09:00:00+00"
+  // "25/04/2026 09:00" -> "2026-04-25 09:00:00" (London wall-clock; zone applied
+  // at SQL emit time via "... Europe/London"::timestamptz so BST/GMT is handled
+  // correctly regardless of who runs the script).
   const [date, time] = s.trim().split(/\s+/)
   const [dd, mm, yyyy] = date.split('/')
-  return `${yyyy}-${mm}-${dd} ${time}:00+00`
+  return `${yyyy}-${mm}-${dd} ${time}:00`
 }
 
 function parseCsv(text) {
@@ -253,14 +270,14 @@ function parseCsv(text) {
   })
 }
 
-function normaliseTeam(ageGroup, raw, aliasLog) {
-  const roster = tournament.saturday.ageGroups.find((g) => g.name === ageGroup)
+function normaliseTeam(day, ageGroup, raw, aliasLog) {
+  const roster = tournament[day].ageGroups.find((g) => g.name === ageGroup)
   if (!roster) return null
   const exact = roster.teams.find((t) => t.toLowerCase() === raw.toLowerCase())
   if (exact) return exact
-  const alias = ALIASES[ageGroup]?.[raw.toLowerCase()]
+  const alias = ALIASES[day]?.[ageGroup]?.[raw.toLowerCase()]
   if (alias) {
-    aliasLog.push({ ageGroup, from: raw, to: alias })
+    aliasLog.push({ day, ageGroup, from: raw, to: alias })
     return alias
   }
   return null
@@ -291,8 +308,8 @@ function loadDayFromCsv(day, csvPath) {
       issues.push(`line ${row.lineNo}: unknown age group "${row.ageGroup}"`)
       continue
     }
-    const home = normaliseTeam(row.ageGroup, row.home, aliasLog)
-    const away = normaliseTeam(row.ageGroup, row.away, aliasLog)
+    const home = normaliseTeam(day, row.ageGroup, row.home, aliasLog)
+    const away = normaliseTeam(day, row.ageGroup, row.away, aliasLog)
     if (!home) issues.push(`line ${row.lineNo} (${row.ageGroup}): unknown home team "${row.home}"`)
     if (!away) issues.push(`line ${row.lineNo} (${row.ageGroup}): unknown away team "${row.away}"`)
     if (!home || !away) continue
@@ -374,7 +391,7 @@ function generateRoundRobinDay(day) {
       home: g.teams[i],
       away: g.teams[j],
       court: g.court,
-      kickoff: `${dayInfo.date} ${addMinutes(g.start, idx * 15)}:00+00`,
+      kickoff: `${dayInfo.date} ${addMinutes(g.start, idx * 15)}:00`,
     }))
     groupsByName[g.name] = { ...g, matches }
   }
@@ -491,7 +508,7 @@ for (const day of ['saturday', 'sunday']) {
       const hVar = teamVar[m.home]
       const aVar = teamVar[m.away]
       const court = m.court ? `'${esc(m.court)}'` : 'null'
-      return `    (${agVar}, ${hVar}, ${aVar}, null, null, ${court}, '${m.kickoff}', 'scheduled')`
+      return `    (${agVar}, ${hVar}, ${aVar}, null, null, ${court}, '${m.kickoff} Europe/London'::timestamptz, 'scheduled')`
     })
     sql += rows.join(',\n') + ';\n\n'
   }
@@ -521,20 +538,24 @@ console.log(`  Sunday:   ${sundaySource}`)
 
 if (aliasLog.length) {
   console.log(`\nTeam-name aliases applied (${aliasLog.length}):`)
-  // de-dupe by (group, from, to)
+  // de-dupe by (day, group, from, to)
   const seen = new Set()
   const counts = new Map()
   for (const a of aliasLog) {
-    const key = `${a.ageGroup}::${a.from}::${a.to}`
+    const key = `${a.day}::${a.ageGroup}::${a.from}::${a.to}`
     counts.set(key, (counts.get(key) ?? 0) + 1)
     seen.add(key)
   }
   const sorted = [...seen].map((k) => {
-    const [ageGroup, from, to] = k.split('::')
-    return { ageGroup, from, to, count: counts.get(k) }
-  }).sort((a, b) => a.ageGroup.localeCompare(b.ageGroup) || a.from.localeCompare(b.from))
+    const [day, ageGroup, from, to] = k.split('::')
+    return { day, ageGroup, from, to, count: counts.get(k) }
+  }).sort((a, b) =>
+    a.day.localeCompare(b.day) ||
+    a.ageGroup.localeCompare(b.ageGroup) ||
+    a.from.localeCompare(b.from)
+  )
   for (const a of sorted) {
-    console.log(`  [${a.ageGroup}] "${a.from}" -> "${a.to}"  (${a.count}x)`)
+    console.log(`  [${a.day}/${a.ageGroup}] "${a.from}" -> "${a.to}"  (${a.count}x)`)
   }
 }
 
