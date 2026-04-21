@@ -1,4 +1,5 @@
 import TeamLogo from './TeamLogo'
+import { formatKickoffDate, formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
 
 interface FixtureCardProps {
@@ -8,17 +9,9 @@ interface FixtureCardProps {
 }
 
 function formatKickoff(iso: string): { time: string; date: string } {
-  const d = new Date(iso)
   return {
-    time: d.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-    date: d.toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    }),
+    time: formatKickoffTime(iso),
+    date: formatKickoffDate(iso),
   }
 }
 

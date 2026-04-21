@@ -1,5 +1,6 @@
 import { pointsForMatch } from '@/lib/standings'
 import TeamLogo from './TeamLogo'
+import { formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
 
 interface ResultCardProps {
@@ -9,10 +10,7 @@ interface ResultCardProps {
 }
 
 function formatKickoff(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatKickoffTime(iso)
 }
 
 function PointsChip({ points }: { points: number }) {

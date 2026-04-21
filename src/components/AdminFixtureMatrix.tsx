@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import TeamLogo from '@/components/TeamLogo'
+import { formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
 
 interface AdminFixtureMatrixProps {
@@ -10,13 +11,10 @@ interface AdminFixtureMatrixProps {
   dayMatches?: Match[]
 }
 
-const BACK_TO_BACK_THRESHOLD_MS = 30 * 60 * 1000
+const BACK_TO_BACK_THRESHOLD_MS = 20 * 60 * 1000
 
 function formatKickoff(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatKickoffTime(iso)
 }
 
 export default function AdminFixtureMatrix({
@@ -95,8 +93,19 @@ export default function AdminFixtureMatrix({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <table className="min-w-full border-collapse text-xs">
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-600 dark:text-zinc-400">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm bg-red-200 ring-1 ring-red-400 dark:bg-red-900 dark:ring-red-700" />
+          Court/time conflict with another fixture
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm bg-amber-200 ring-1 ring-amber-400 dark:bg-amber-900 dark:ring-amber-700" />
+          Team scheduled back-to-back (within 30 min)
+        </span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+        <table className="min-w-full border-collapse text-xs">
         <thead>
           <tr className="bg-zinc-50 dark:bg-zinc-900">
             <th
@@ -188,8 +197,9 @@ export default function AdminFixtureMatrix({
               })}
             </tr>
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

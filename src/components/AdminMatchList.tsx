@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import ScoreEntryForm from './ScoreEntryForm'
+import { formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
 
 interface AdminMatchListProps {
@@ -12,10 +13,7 @@ interface AdminMatchListProps {
 }
 
 function formatKickoff(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatKickoffTime(iso)
 }
 
 export default function AdminMatchList({

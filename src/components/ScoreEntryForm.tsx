@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase'
+import {
+  buildIsoFromLondonTime,
+  formatKickoffDate,
+  getLondonTimeHHmm,
+} from '@/lib/time'
 import type { Match, MatchStatus, Team } from '@/lib/types'
 
 interface ScoreEntryFormProps {
@@ -14,27 +19,13 @@ interface ScoreEntryFormProps {
   onCancel: () => void
 }
 
-function toLocalTimeValue(iso: string): string {
-  const d = new Date(iso)
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  return `${hh}:${mm}`
-}
-
 function formatLocalDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', {
+  return formatKickoffDate(iso, {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   })
-}
-
-function buildIsoFromTime(originalIso: string, hhmm: string): string {
-  const d = new Date(originalIso)
-  const [h, m] = hhmm.split(':').map(Number)
-  d.setHours(h, m, 0, 0)
-  return d.toISOString()
 }
 
 export default function ScoreEntryForm({
@@ -45,7 +36,7 @@ export default function ScoreEntryForm({
   onSave,
   onCancel,
 }: ScoreEntryFormProps) {
-  const originalTime = useMemo(() => toLocalTimeValue(match.kickoff_time), [match.kickoff_time])
+  const originalTime = useMemo(() => getLondonTimeHHmm(match.kickoff_time), [match.kickoff_time])
   const originalCourt = match.court ?? ''
 
   const [homeScore, setHomeScore] = useState<string>(
@@ -65,24 +56,38 @@ export default function ScoreEntryForm({
 
   const submitDisabled =
     saving ||
-    homeScore.trim() === '' ||
-    awayScore.trim() === '' ||
     kickoffTime.trim() === '' ||
     (scheduleChanged && !confirmScheduleChange)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    const home = Number(homeScore)
-    const away = Number(awayScore)
-    if (
-      !Number.isInteger(home) ||
-      !Number.isInteger(away) ||
-      home < 0 ||
-      away < 0
-    ) {
-      toast.error('Scores must be non-negative whole numbers.')
+    const homeTrim = homeScore.trim()
+    const awayTrim = awayScore.trim()
+    const homeProvided = homeTrim !== ''
+    const awayProvided = awayTrim !== ''
+
+    if (homeProvided !== awayProvided) {
+      toast.error('Enter both scores or leave both blank.')
       return
+    }
+
+    let homeValue: number | null = null
+    let awayValue: number | null = null
+    if (homeProvided && awayProvided) {
+      const home = Number(homeTrim)
+      const away = Number(awayTrim)
+      if (
+        !Number.isInteger(home) ||
+        !Number.isInteger(away) ||
+        home < 0 ||
+        away < 0
+      ) {
+        toast.error('Scores must be non-negative whole numbers.')
+        return
+      }
+      homeValue = home
+      awayValue = away
     }
 
     if (!/^\d{2}:\d{2}$/.test(kickoffTime)) {
@@ -95,10 +100,10 @@ export default function ScoreEntryForm({
     const { error } = await supabase
       .from('matches')
       .update({
-        home_score: home,
-        away_score: away,
+        home_score: homeValue,
+        away_score: awayValue,
         status,
-        kickoff_time: buildIsoFromTime(match.kickoff_time, kickoffTime),
+        kickoff_time: buildIsoFromLondonTime(match.kickoff_time, kickoffTime),
         court: court.trim() === '' ? null : court.trim(),
       })
       .eq('id', match.id)
@@ -225,14 +230,19 @@ export default function ScoreEntryForm({
                 >
                   Court
                 </label>
-                <input
+                <select
                   id="court"
-                  type="text"
                   value={court}
                   onChange={(e) => setCourt(e.target.value)}
-                  placeholder="e.g. Court 1"
                   className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-                />
+                >
+                  <option value="">— None —</option>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <option key={n} value={`Court ${n}`}>
+                      Court {n}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

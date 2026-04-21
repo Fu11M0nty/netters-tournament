@@ -26,6 +26,7 @@ export default function AdminPage() {
   const [currentGroupId, setCurrentGroupId] = useState<string | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [matches, setMatches] = useState<Match[]>([])
+  const [dayMatches, setDayMatches] = useState<Match[]>([])
   const [loadingGroups, setLoadingGroups] = useState(true)
   const [loadingMatches, setLoadingMatches] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
@@ -75,6 +76,31 @@ export default function AdminPage() {
     [ageGroups, currentGroupId]
   )
 
+  const groupIdsForDay = useMemo(
+    () => groupsForDay.map((g) => g.id),
+    [groupsForDay]
+  )
+
+  const loadDayMatches = useCallback(async () => {
+    if (groupIdsForDay.length === 0) {
+      setDayMatches([])
+      return
+    }
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .in('age_group_id', groupIdsForDay)
+    if (error) {
+      toast.error(`Could not load day schedule: ${error.message}`)
+      return
+    }
+    setDayMatches(data ?? [])
+  }, [groupIdsForDay, supabase])
+
+  useEffect(() => {
+    loadDayMatches()
+  }, [loadDayMatches])
+
   const loadMatches = useCallback(async () => {
     if (!currentGroupId) {
       setTeams([])
@@ -110,6 +136,10 @@ export default function AdminPage() {
   useEffect(() => {
     loadMatches()
   }, [loadMatches])
+
+  const handleSaved = useCallback(async () => {
+    await Promise.all([loadMatches(), loadDayMatches()])
+  }, [loadMatches, loadDayMatches])
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -245,15 +275,19 @@ export default function AdminPage() {
                 matches={matches}
                 teams={teams}
                 ageGroupName={currentGroup.name}
-                onSaved={loadMatches}
+                onSaved={handleSaved}
               />
             ) : view === 'matrix' ? (
-              <AdminFixtureMatrix teams={teams} matches={matches} />
+              <AdminFixtureMatrix
+                teams={teams}
+                matches={matches}
+                dayMatches={dayMatches}
+              />
             ) : (
               <AdminTeamList
                 teams={teams}
                 ageGroupName={currentGroup.name}
-                onSaved={loadMatches}
+                onSaved={handleSaved}
               />
             )}
           </>
