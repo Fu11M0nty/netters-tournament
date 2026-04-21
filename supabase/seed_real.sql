@@ -63,7 +63,7 @@ begin
     (ag_sat1, t_sat1_5, t_sat1_2, null, null, 'Court 5', '2026-04-25 10:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_3, t_sat1_4, null, null, 'Court 5', '2026-04-25 10:15:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_6, t_sat1_1, null, null, 'Court 5', '2026-04-25 10:30:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat1, t_sat1_7, t_sat1_4, null, null, 'Court 5', '2026-04-25 10:45:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat1, t_sat1_7, t_sat1_5, null, null, 'Court 5', '2026-04-25 10:45:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_2, t_sat1_3, null, null, 'Court 5', '2026-04-25 11:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_1, t_sat1_5, null, null, 'Court 5', '2026-04-25 11:15:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_4, t_sat1_6, null, null, 'Court 5', '2026-04-25 11:30:00 Europe/London'::timestamptz, 'scheduled'),
@@ -74,9 +74,9 @@ begin
     (ag_sat1, t_sat1_4, t_sat1_2, null, null, 'Court 5', '2026-04-25 12:45:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_5, t_sat1_7, null, null, 'Court 5', '2026-04-25 13:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat1, t_sat1_3, t_sat1_1, null, null, 'Court 5', '2026-04-25 13:15:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat1, t_sat1_5, t_sat1_6, null, null, 'Court 5', '2026-04-25 13:30:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat1, t_sat1_1, t_sat1_2, null, null, 'Court 5', '2026-04-25 13:45:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat1, t_sat1_6, t_sat1_7, null, null, 'Court 5', '2026-04-25 14:00:00 Europe/London'::timestamptz, 'scheduled');
+    (ag_sat1, t_sat1_4, t_sat1_6, null, null, 'Court 5', '2026-04-25 13:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat1, t_sat1_3, t_sat1_7, null, null, 'Court 5', '2026-04-25 13:45:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat1, t_sat1_1, t_sat1_2, null, null, 'Court 5', '2026-04-25 14:00:00 Europe/London'::timestamptz, 'scheduled');
 
   -- Saturday / Under 11's — 10 teams, 45 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Netters', 'MN', '#e11d2d', ag_sat2) returning id into t_sat2_1;
@@ -196,7 +196,7 @@ begin
     (ag_sat3, t_sat3_5, t_sat3_8, null, null, 'Court 4', '2026-04-25 16:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat3, t_sat3_6, t_sat3_7, null, null, 'Court 5', '2026-04-25 16:30:00 Europe/London'::timestamptz, 'scheduled');
 
-  -- Saturday / Under 13's — 10 teams, 45 matches
+  -- Saturday / Under 13's — 10 teams, 36 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Netters', 'MN', '#e11d2d', ag_sat4) returning id into t_sat4_1;
   insert into teams (name, short_name, color, age_group_id) values ('Durham', 'DUR', '#f59e0b', ag_sat4) returning id into t_sat4_2;
   insert into teams (name, short_name, color, age_group_id) values ('AP Saints', 'AS', '#dc2626', ag_sat4) returning id into t_sat4_3;
@@ -212,48 +212,39 @@ begin
     (ag_sat4, t_sat4_1, t_sat4_10, null, null, 'Court 3', '2026-04-25 09:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_2, t_sat4_9, null, null, 'Court 3', '2026-04-25 09:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_3, t_sat4_8, null, null, 'Court 3', '2026-04-25 09:20:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_4, t_sat4_7, null, null, 'Court 3', '2026-04-25 09:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_5, t_sat4_6, null, null, 'Court 3', '2026-04-25 09:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_1, t_sat4_9, null, null, 'Court 3', '2026-04-25 10:10:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_2, t_sat4_7, null, null, 'Court 3', '2026-04-25 10:20:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_3, t_sat4_6, null, null, 'Court 3', '2026-04-25 10:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_4, t_sat4_5, null, null, 'Court 3', '2026-04-25 10:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_10, t_sat4_8, null, null, 'Court 3', '2026-04-25 10:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_1, t_sat4_8, null, null, 'Court 3', '2026-04-25 11:20:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_9, t_sat4_7, null, null, 'Court 3', '2026-04-25 11:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_10, t_sat4_6, null, null, 'Court 3', '2026-04-25 11:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_2, t_sat4_5, null, null, 'Court 3', '2026-04-25 11:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_3, t_sat4_4, null, null, 'Court 3', '2026-04-25 12:00:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_1, t_sat4_7, null, null, 'Court 3', '2026-04-25 12:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_8, t_sat4_6, null, null, 'Court 3', '2026-04-25 12:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_9, t_sat4_5, null, null, 'Court 3', '2026-04-25 12:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_10, t_sat4_4, null, null, 'Court 3', '2026-04-25 13:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_2, t_sat4_3, null, null, 'Court 3', '2026-04-25 13:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_1, t_sat4_6, null, null, 'Court 3', '2026-04-25 13:40:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_7, t_sat4_5, null, null, 'Court 3', '2026-04-25 13:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_8, t_sat4_4, null, null, 'Court 3', '2026-04-25 14:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_9, t_sat4_3, null, null, 'Court 3', '2026-04-25 14:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_10, t_sat4_2, null, null, 'Court 3', '2026-04-25 14:20:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_1, t_sat4_5, null, null, 'Court 1', '2026-04-25 15:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_6, t_sat4_4, null, null, 'Court 2', '2026-04-25 15:10:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_7, t_sat4_3, null, null, 'Court 3', '2026-04-25 15:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_8, t_sat4_2, null, null, 'Court 4', '2026-04-25 15:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_9, t_sat4_10, null, null, 'Court 5', '2026-04-25 15:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_1, t_sat4_4, null, null, 'Court 1', '2026-04-25 15:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_5, t_sat4_3, null, null, 'Court 2', '2026-04-25 15:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_6, t_sat4_2, null, null, 'Court 3', '2026-04-25 15:40:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_7, t_sat4_10, null, null, 'Court 4', '2026-04-25 15:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_8, t_sat4_9, null, null, 'Court 5', '2026-04-25 15:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_1, t_sat4_3, null, null, 'Court 1', '2026-04-25 16:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_4, t_sat4_2, null, null, 'Court 2', '2026-04-25 16:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_5, t_sat4_10, null, null, 'Court 3', '2026-04-25 16:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_6, t_sat4_9, null, null, 'Court 4', '2026-04-25 16:10:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_7, t_sat4_8, null, null, 'Court 5', '2026-04-25 16:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_2, t_sat4_1, null, null, 'Court 1', '2026-04-25 16:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_10, t_sat4_3, null, null, 'Court 2', '2026-04-25 16:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat4, t_sat4_4, t_sat4_9, null, null, 'Court 3', '2026-04-25 16:40:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_5, t_sat4_8, null, null, 'Court 4', '2026-04-25 16:40:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat4, t_sat4_6, t_sat4_7, null, null, 'Court 5', '2026-04-25 16:40:00 Europe/London'::timestamptz, 'scheduled');
+    (ag_sat4, t_sat4_5, t_sat4_8, null, null, 'Court 4', '2026-04-25 16:40:00 Europe/London'::timestamptz, 'scheduled');
 
   -- Saturday / Under 14's — 9 teams, 36 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Netters', 'MN', '#e11d2d', ag_sat5) returning id into t_sat5_1;
@@ -276,17 +267,17 @@ begin
     (ag_sat5, t_sat5_2, t_sat5_6, null, null, 'Court 4', '2026-04-25 10:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_4, t_sat5_5, null, null, 'Court 4', '2026-04-25 10:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_1, t_sat5_8, null, null, 'Court 4', '2026-04-25 10:20:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat5, t_sat5_9, t_sat5_4, null, null, 'Court 4', '2026-04-25 10:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat5, t_sat5_9, t_sat5_7, null, null, 'Court 4', '2026-04-25 10:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_3, t_sat5_5, null, null, 'Court 4', '2026-04-25 10:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_2, t_sat5_4, null, null, 'Court 4', '2026-04-25 10:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_8, t_sat5_6, null, null, 'Court 4', '2026-04-25 11:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_1, t_sat5_7, null, null, 'Court 4', '2026-04-25 11:10:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat5, t_sat5_8, t_sat5_5, null, null, 'Court 4', '2026-04-25 11:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat5, t_sat5_9, t_sat5_5, null, null, 'Court 4', '2026-04-25 11:20:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_3, t_sat5_2, null, null, 'Court 4', '2026-04-25 11:30:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat5, t_sat5_9, t_sat5_8, null, null, 'Court 4', '2026-04-25 11:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat5, t_sat5_4, t_sat5_8, null, null, 'Court 4', '2026-04-25 11:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_1, t_sat5_6, null, null, 'Court 4', '2026-04-25 11:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_7, t_sat5_5, null, null, 'Court 4', '2026-04-25 12:00:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat5, t_sat5_9, t_sat5_6, null, null, 'Court 4', '2026-04-25 12:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat5, t_sat5_9, t_sat5_2, null, null, 'Court 4', '2026-04-25 12:10:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_3, t_sat5_8, null, null, 'Court 4', '2026-04-25 12:20:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_1, t_sat5_5, null, null, 'Court 4', '2026-04-25 12:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_4, t_sat5_6, null, null, 'Court 4', '2026-04-25 12:40:00 Europe/London'::timestamptz, 'scheduled'),
@@ -299,7 +290,7 @@ begin
     (ag_sat5, t_sat5_9, t_sat5_5, null, null, 'Court 4', '2026-04-25 13:50:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_8, t_sat5_7, null, null, 'Court 4', '2026-04-25 14:00:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_4, t_sat5_3, null, null, 'Court 4', '2026-04-25 14:10:00 Europe/London'::timestamptz, 'scheduled'),
-    (ag_sat5, t_sat5_6, t_sat5_7, null, null, 'Court 4', '2026-04-25 14:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sat5, t_sat5_5, t_sat5_7, null, null, 'Court 4', '2026-04-25 14:20:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_1, t_sat5_3, null, null, 'Court 4', '2026-04-25 14:30:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_2, t_sat5_9, null, null, 'Court 4', '2026-04-25 14:40:00 Europe/London'::timestamptz, 'scheduled'),
     (ag_sat5, t_sat5_4, t_sat5_8, null, null, 'Court 5', '2026-04-25 14:40:00 Europe/London'::timestamptz, 'scheduled');
@@ -339,7 +330,7 @@ begin
   insert into age_groups (name, slug, day, display_order) values ('Under 14''s', 'under-14s', 'sunday', 3) returning id into ag_sun3;
   insert into age_groups (name, slug, day, display_order) values ('Under 15''s', 'under-15s', 'sunday', 4) returning id into ag_sun4;
 
-  -- Sunday / Under 12's — 7 teams, 0 matches
+  -- Sunday / Under 12's — 7 teams, 21 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Dons', 'MD', '#0b1221', ag_sun1) returning id into t_sun1_1;
   insert into teams (name, short_name, color, age_group_id) values ('Magic', 'MAG', '#f59e0b', ag_sun1) returning id into t_sun1_2;
   insert into teams (name, short_name, color, age_group_id) values ('Clan', 'CLA', '#dc2626', ag_sun1) returning id into t_sun1_3;
@@ -348,7 +339,30 @@ begin
   insert into teams (name, short_name, color, age_group_id) values ('Little Sutton', 'LS', '#0891b2', ag_sun1) returning id into t_sun1_6;
   insert into teams (name, short_name, color, age_group_id) values ('Turnford Yellow', 'TY', '#be185d', ag_sun1) returning id into t_sun1_7;
 
-  -- Sunday / Under 13's — 10 teams, 0 matches
+  insert into matches (age_group_id, home_team_id, away_team_id, home_score, away_score, court, kickoff_time, status) values
+    (ag_sun1, t_sun1_2, t_sun1_7, null, null, 'Court 1', '2026-04-26 09:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_5, t_sun1_6, null, null, 'Court 1', '2026-04-26 09:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_3, t_sun1_4, null, null, 'Court 1', '2026-04-26 09:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_1, t_sun1_7, null, null, 'Court 1', '2026-04-26 10:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_2, t_sun1_4, null, null, 'Court 1', '2026-04-26 10:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_5, t_sun1_3, null, null, 'Court 1', '2026-04-26 10:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_6, t_sun1_1, null, null, 'Court 1', '2026-04-26 11:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_7, t_sun1_4, null, null, 'Court 1', '2026-04-26 11:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_2, t_sun1_5, null, null, 'Court 1', '2026-04-26 11:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_1, t_sun1_4, null, null, 'Court 1', '2026-04-26 12:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_3, t_sun1_6, null, null, 'Court 1', '2026-04-26 12:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_7, t_sun1_5, null, null, 'Court 1', '2026-04-26 12:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_1, t_sun1_3, null, null, 'Court 1', '2026-04-26 13:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_6, t_sun1_2, null, null, 'Court 1', '2026-04-26 13:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_4, t_sun1_5, null, null, 'Court 1', '2026-04-26 13:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_3, t_sun1_2, null, null, 'Court 1', '2026-04-26 14:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_4, t_sun1_7, null, null, 'Court 1', '2026-04-26 14:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_1, t_sun1_5, null, null, 'Court 1', '2026-04-26 14:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_3, t_sun1_6, null, null, 'Court 1', '2026-04-26 15:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_5, t_sun1_7, null, null, 'Court 3', '2026-04-26 15:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun1, t_sun1_1, t_sun1_2, null, null, 'Court 1', '2026-04-26 15:20:00 Europe/London'::timestamptz, 'scheduled');
+
+  -- Sunday / Under 13's — 10 teams, 40 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Dons', 'MD', '#0b1221', ag_sun2) returning id into t_sun2_1;
   insert into teams (name, short_name, color, age_group_id) values ('Magic', 'MAG', '#f59e0b', ag_sun2) returning id into t_sun2_2;
   insert into teams (name, short_name, color, age_group_id) values ('Blaze Elite', 'BE', '#dc2626', ag_sun2) returning id into t_sun2_3;
@@ -360,7 +374,49 @@ begin
   insert into teams (name, short_name, color, age_group_id) values ('Barr Beacon', 'BB', '#1e40af', ag_sun2) returning id into t_sun2_9;
   insert into teams (name, short_name, color, age_group_id) values ('Hatfield', 'HAT', '#eab308', ag_sun2) returning id into t_sun2_10;
 
-  -- Sunday / Under 14's — 9 teams, 0 matches
+  insert into matches (age_group_id, home_team_id, away_team_id, home_score, away_score, court, kickoff_time, status) values
+    (ag_sun2, t_sun2_1, t_sun2_10, null, null, 'Court 2', '2026-04-26 09:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_2, t_sun2_9, null, null, 'Court 2', '2026-04-26 09:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_8, t_sun2_7, null, null, 'Court 2', '2026-04-26 09:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_3, t_sun2_6, null, null, 'Court 2', '2026-04-26 09:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_4, t_sun2_5, null, null, 'Court 2', '2026-04-26 09:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_9, null, null, 'Court 2', '2026-04-26 09:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_2, t_sun2_6, null, null, 'Court 2', '2026-04-26 10:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_8, t_sun2_5, null, null, 'Court 2', '2026-04-26 10:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_3, t_sun2_4, null, null, 'Court 2', '2026-04-26 10:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_10, t_sun2_7, null, null, 'Court 2', '2026-04-26 10:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_7, null, null, 'Court 2', '2026-04-26 10:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_9, t_sun2_6, null, null, 'Court 2', '2026-04-26 10:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_10, t_sun2_5, null, null, 'Court 2', '2026-04-26 11:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_2, t_sun2_4, null, null, 'Court 2', '2026-04-26 11:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_8, t_sun2_3, null, null, 'Court 2', '2026-04-26 11:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_6, null, null, 'Court 2', '2026-04-26 11:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_7, t_sun2_5, null, null, 'Court 2', '2026-04-26 11:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_9, t_sun2_4, null, null, 'Court 2', '2026-04-26 11:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_10, t_sun2_3, null, null, 'Court 2', '2026-04-26 12:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_2, t_sun2_8, null, null, 'Court 2', '2026-04-26 12:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_5, null, null, 'Court 2', '2026-04-26 12:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_6, t_sun2_4, null, null, 'Court 2', '2026-04-26 12:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_7, t_sun2_3, null, null, 'Court 2', '2026-04-26 12:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_9, t_sun2_8, null, null, 'Court 2', '2026-04-26 12:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_10, t_sun2_2, null, null, 'Court 2', '2026-04-26 13:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_4, null, null, 'Court 2', '2026-04-26 13:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_5, t_sun2_3, null, null, 'Court 2', '2026-04-26 13:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_6, t_sun2_8, null, null, 'Court 2', '2026-04-26 13:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_7, t_sun2_2, null, null, 'Court 2', '2026-04-26 13:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_9, t_sun2_10, null, null, 'Court 2', '2026-04-26 13:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_3, null, null, 'Court 2', '2026-04-26 14:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_4, t_sun2_8, null, null, 'Court 2', '2026-04-26 14:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_5, t_sun2_2, null, null, 'Court 2', '2026-04-26 14:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_6, t_sun2_10, null, null, 'Court 2', '2026-04-26 14:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_7, t_sun2_9, null, null, 'Court 2', '2026-04-26 14:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_1, t_sun2_8, null, null, 'Court 2', '2026-04-26 14:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_3, t_sun2_2, null, null, 'Court 2', '2026-04-26 15:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_4, t_sun2_10, null, null, 'Court 2', '2026-04-26 15:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_5, t_sun2_9, null, null, 'Court 2', '2026-04-26 15:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun2, t_sun2_6, t_sun2_7, null, null, 'Court 2', '2026-04-26 15:30:00 Europe/London'::timestamptz, 'scheduled');
+
+  -- Sunday / Under 14's — 9 teams, 37 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Dons', 'MD', '#0b1221', ag_sun3) returning id into t_sun3_1;
   insert into teams (name, short_name, color, age_group_id) values ('Magic', 'MAG', '#f59e0b', ag_sun3) returning id into t_sun3_2;
   insert into teams (name, short_name, color, age_group_id) values ('Turnford NC Black', 'TNB', '#dc2626', ag_sun3) returning id into t_sun3_3;
@@ -371,7 +427,46 @@ begin
   insert into teams (name, short_name, color, age_group_id) values ('Hatfield', 'HAT', '#ea580c', ag_sun3) returning id into t_sun3_8;
   insert into teams (name, short_name, color, age_group_id) values ('Little Sutton', 'LS', '#1e40af', ag_sun3) returning id into t_sun3_9;
 
-  -- Sunday / Under 15's — 10 teams, 0 matches
+  insert into matches (age_group_id, home_team_id, away_team_id, home_score, away_score, court, kickoff_time, status) values
+    (ag_sun3, t_sun3_2, t_sun3_9, null, null, 'Court 3', '2026-04-26 09:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_7, t_sun3_8, null, null, 'Court 3', '2026-04-26 09:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_3, t_sun3_6, null, null, 'Court 3', '2026-04-26 09:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_4, t_sun3_5, null, null, 'Court 3', '2026-04-26 09:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_9, null, null, 'Court 3', '2026-04-26 09:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_2, t_sun3_6, null, null, 'Court 3', '2026-04-26 09:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_7, t_sun3_5, null, null, 'Court 3', '2026-04-26 10:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_3, t_sun3_4, null, null, 'Court 3', '2026-04-26 10:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_8, null, null, 'Court 3', '2026-04-26 10:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_9, t_sun3_6, null, null, 'Court 3', '2026-04-26 10:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_2, t_sun3_4, null, null, 'Court 3', '2026-04-26 10:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_7, t_sun3_3, null, null, 'Court 3', '2026-04-26 10:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_8, t_sun3_5, null, null, 'Court 3', '2026-04-26 11:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_6, null, null, 'Court 3', '2026-04-26 11:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_9, t_sun3_4, null, null, 'Court 3', '2026-04-26 11:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_2, t_sun3_7, null, null, 'Court 3', '2026-04-26 11:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_3, t_sun3_8, null, null, 'Court 3', '2026-04-26 11:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_5, null, null, 'Court 3', '2026-04-26 11:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_6, t_sun3_4, null, null, 'Court 3', '2026-04-26 12:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_9, t_sun3_7, null, null, 'Court 3', '2026-04-26 12:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_2, t_sun3_8, null, null, 'Court 3', '2026-04-26 12:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_4, null, null, 'Court 3', '2026-04-26 12:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_3, t_sun3_5, null, null, 'Court 3', '2026-04-26 12:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_6, t_sun3_7, null, null, 'Court 3', '2026-04-26 12:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_9, t_sun3_6, null, null, 'Court 3', '2026-04-26 13:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_3, null, null, 'Court 3', '2026-04-26 13:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_4, t_sun3_7, null, null, 'Court 3', '2026-04-26 13:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_5, t_sun3_2, null, null, 'Court 3', '2026-04-26 13:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_7, null, null, 'Court 3', '2026-04-26 13:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_9, t_sun3_4, null, null, 'Court 3', '2026-04-26 13:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_8, t_sun3_5, null, null, 'Court 3', '2026-04-26 14:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_3, t_sun3_2, null, null, 'Court 3', '2026-04-26 14:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_4, t_sun3_6, null, null, 'Court 3', '2026-04-26 14:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_1, t_sun3_2, null, null, 'Court 3', '2026-04-26 14:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_7, t_sun3_9, null, null, 'Court 3', '2026-04-26 14:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_3, t_sun3_8, null, null, 'Court 3', '2026-04-26 14:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun3, t_sun3_6, t_sun3_8, null, null, 'Court 3', '2026-04-26 15:00:00 Europe/London'::timestamptz, 'scheduled');
+
+  -- Sunday / Under 15's — 10 teams, 39 matches
   insert into teams (name, short_name, color, age_group_id) values ('MK Dons', 'MD', '#0b1221', ag_sun4) returning id into t_sun4_1;
   insert into teams (name, short_name, color, age_group_id) values ('Magic', 'MAG', '#f59e0b', ag_sun4) returning id into t_sun4_2;
   insert into teams (name, short_name, color, age_group_id) values ('Blaze Elite', 'BE', '#dc2626', ag_sun4) returning id into t_sun4_3;
@@ -382,5 +477,46 @@ begin
   insert into teams (name, short_name, color, age_group_id) values ('Marlow Kites Wildcats', 'MKW', '#ea580c', ag_sun4) returning id into t_sun4_8;
   insert into teams (name, short_name, color, age_group_id) values ('AP Saints', 'AS', '#1e40af', ag_sun4) returning id into t_sun4_9;
   insert into teams (name, short_name, color, age_group_id) values ('Swan', 'SWA', '#eab308', ag_sun4) returning id into t_sun4_10;
+
+  insert into matches (age_group_id, home_team_id, away_team_id, home_score, away_score, court, kickoff_time, status) values
+    (ag_sun4, t_sun4_1, t_sun4_10, null, null, 'Court 4', '2026-04-26 09:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_2, t_sun4_8, null, null, 'Court 4', '2026-04-26 09:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_9, t_sun4_7, null, null, 'Court 4', '2026-04-26 09:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_3, t_sun4_6, null, null, 'Court 4', '2026-04-26 09:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_4, t_sun4_5, null, null, 'Court 4', '2026-04-26 09:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_1, t_sun4_8, null, null, 'Court 4', '2026-04-26 09:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_2, t_sun4_6, null, null, 'Court 4', '2026-04-26 10:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_9, t_sun4_5, null, null, 'Court 4', '2026-04-26 10:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_3, t_sun4_4, null, null, 'Court 4', '2026-04-26 10:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_10, t_sun4_7, null, null, 'Court 4', '2026-04-26 10:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_1, t_sun4_7, null, null, 'Court 4', '2026-04-26 10:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_8, t_sun4_6, null, null, 'Court 4', '2026-04-26 10:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_10, t_sun4_5, null, null, 'Court 4', '2026-04-26 11:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_2, t_sun4_4, null, null, 'Court 4', '2026-04-26 11:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_9, t_sun4_3, null, null, 'Court 4', '2026-04-26 11:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_1, t_sun4_6, null, null, 'Court 4', '2026-04-26 11:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_7, t_sun4_5, null, null, 'Court 4', '2026-04-26 11:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_8, t_sun4_4, null, null, 'Court 4', '2026-04-26 11:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_10, t_sun4_3, null, null, 'Court 4', '2026-04-26 12:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_2, t_sun4_9, null, null, 'Court 4', '2026-04-26 12:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_1, t_sun4_5, null, null, 'Court 4', '2026-04-26 12:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_6, t_sun4_4, null, null, 'Court 4', '2026-04-26 12:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_7, t_sun4_3, null, null, 'Court 4', '2026-04-26 12:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_8, t_sun4_9, null, null, 'Court 4', '2026-04-26 12:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_10, t_sun4_8, null, null, 'Court 4', '2026-04-26 13:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_1, t_sun4_4, null, null, 'Court 4', '2026-04-26 13:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_5, t_sun4_3, null, null, 'Court 4', '2026-04-26 13:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_6, t_sun4_9, null, null, 'Court 4', '2026-04-26 13:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_7, t_sun4_2, null, null, 'Court 4', '2026-04-26 13:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_8, t_sun4_10, null, null, 'Court 4', '2026-04-26 13:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_3, t_sun4_1, null, null, 'Court 4', '2026-04-26 14:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_4, t_sun4_9, null, null, 'Court 4', '2026-04-26 14:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_5, t_sun4_2, null, null, 'Court 4', '2026-04-26 14:20:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_6, t_sun4_10, null, null, 'Court 4', '2026-04-26 14:30:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_7, t_sun4_8, null, null, 'Court 4', '2026-04-26 14:40:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_1, t_sun4_9, null, null, 'Court 4', '2026-04-26 14:50:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_3, t_sun4_2, null, null, 'Court 4', '2026-04-26 15:00:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_4, t_sun4_10, null, null, 'Court 4', '2026-04-26 15:10:00 Europe/London'::timestamptz, 'scheduled'),
+    (ag_sun4, t_sun4_5, t_sun4_8, null, null, 'Court 4', '2026-04-26 15:20:00 Europe/London'::timestamptz, 'scheduled');
 
 end $$;
