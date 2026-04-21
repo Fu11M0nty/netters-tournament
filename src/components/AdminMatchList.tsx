@@ -40,6 +40,21 @@ export default function AdminMatchList({
     [matches]
   )
 
+  const duplicateIds = useMemo(() => {
+    const byPair = new Map<string, string[]>()
+    for (const m of matches) {
+      const key = [m.home_team_id, m.away_team_id].sort().join('|')
+      const arr = byPair.get(key) ?? []
+      arr.push(m.id)
+      byPair.set(key, arr)
+    }
+    const dupes = new Set<string>()
+    for (const arr of byPair.values()) {
+      if (arr.length > 1) arr.forEach((id) => dupes.add(id))
+    }
+    return dupes
+  }, [matches])
+
   const editingMatch = editingId
     ? sorted.find((m) => m.id === editingId) ?? null
     : null
@@ -68,10 +83,16 @@ export default function AdminMatchList({
             ? `${match.home_score} – ${match.away_score}`
             : '–'
 
+          const isDuplicate = duplicateIds.has(match.id)
           return (
             <li
               key={match.id}
-              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+              title={isDuplicate ? 'Duplicate fixture — this pair is scheduled more than once' : undefined}
+              className={
+                isDuplicate
+                  ? 'flex animate-pulse flex-col gap-2 bg-fuchsia-100 px-4 py-3 dark:bg-fuchsia-950/60 sm:flex-row sm:items-center sm:gap-4'
+                  : 'flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4'
+              }
             >
               <div className="flex shrink-0 gap-3 text-xs text-zinc-500 tabular-nums dark:text-zinc-400 sm:w-32">
                 <span className="font-semibold text-zinc-700 dark:text-zinc-300">
@@ -81,6 +102,11 @@ export default function AdminMatchList({
               </div>
 
               <div className="flex-1 text-sm text-zinc-900 dark:text-zinc-100">
+                {isDuplicate && (
+                  <span className="mr-2 rounded-sm bg-fuchsia-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                    Duplicate
+                  </span>
+                )}
                 <span className="font-medium">{home.name}</span>
                 <span className="mx-2 text-zinc-400">vs</span>
                 <span className="font-medium">{away.name}</span>

@@ -105,6 +105,10 @@ export default function AdminFixtureMatrix({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-600 dark:text-zinc-400">
         <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 animate-pulse rounded-sm bg-orange-300 ring-1 ring-orange-500 dark:bg-orange-900 dark:ring-orange-600" />
+          Missing fixture — pair not scheduled
+        </span>
+        <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 animate-pulse rounded-sm bg-fuchsia-300 ring-1 ring-fuchsia-500 dark:bg-fuchsia-900 dark:ring-fuchsia-600" />
           Duplicate fixture — same pair scheduled more than once
         </span>
@@ -171,9 +175,10 @@ export default function AdminFixtureMatrix({
                   return (
                     <td
                       key={col.id}
-                      className="border-b border-zinc-200 px-2 py-2 text-center text-zinc-300 dark:border-zinc-800 dark:text-zinc-700"
+                      title={`Missing fixture: ${row.name} vs ${col.name} not scheduled`}
+                      className="animate-pulse border-b border-orange-300 bg-orange-100 px-2 py-2 text-center text-orange-900 dark:border-orange-700 dark:bg-orange-950/60 dark:text-orange-200"
                     >
-                      ·
+                      <div className="text-[10px] font-bold uppercase tracking-wide">Missing</div>
                     </td>
                   )
                 }
