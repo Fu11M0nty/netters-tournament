@@ -71,6 +71,11 @@ export default function StandingsTable({
                         🏆
                       </span>
                     )}
+                    {row.position === 2 && allComplete && (
+                      <span aria-label="Runner-up" title="Runner-up">
+                        🥈
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="py-3 px-2 text-right tabular-nums text-zinc-700 dark:text-zinc-300">

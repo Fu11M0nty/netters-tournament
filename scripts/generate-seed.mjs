@@ -181,6 +181,39 @@ const ALIASES = {
 }
 
 // ---------------------------------------------------------------------------
+// Demo fictional scores. One group per day is fully completed (shows a champion
+// with the 🏆 trophy); every other group has a prefix of matches (by kickoff
+// order) marked completed with realistic netball scores. Deterministic so
+// repeat runs produce the same seed.
+// ---------------------------------------------------------------------------
+
+const DEMO = {
+  allCompleteGroups: {
+    saturday: "Under 15's",
+    sunday: "Under 12's",
+  },
+  partialFraction: 0.5,
+  scoreMin: 0,
+  scoreMax: 20,
+}
+
+function mulberry32(a) {
+  return function () {
+    let t = (a += 0x6d2b79f5)
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+const rand = mulberry32(0x4d4b4e54) // "MKNT"
+
+function fictionalScore() {
+  return (
+    Math.floor(rand() * (DEMO.scoreMax - DEMO.scoreMin + 1)) + DEMO.scoreMin
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -446,6 +479,9 @@ declare
 // Build day -> groupsByName lookup in the order we want to emit
 const bundle = { saturday: saturdayGroups, sunday: sundayGroups }
 
+// Accumulated during emission — used to build supabase/seed_scores.sql
+const completedFixtures = []
+
 const vars = []
 for (const day of ['saturday', 'sunday']) {
   for (const g of tournament[day].ageGroups) {
@@ -504,6 +540,35 @@ for (const day of ['saturday', 'sunday']) {
       return (a.court || '').localeCompare(b.court || '')
     })
 
+    const isAllComplete = DEMO.allCompleteGroups[day] === g.name
+    const completedCount = isAllComplete
+      ? ordered.length
+      : Math.floor(ordered.length * DEMO.partialFraction)
+
+    // Stamp resolved scores + status onto each match so seed_scores.sql stays
+    // in lock-step with seed_real.sql.
+    for (let i = 0; i < ordered.length; i++) {
+      const completed = i < completedCount
+      ordered[i].homeScore = completed ? fictionalScore() : null
+      ordered[i].awayScore = completed ? fictionalScore() : null
+      ordered[i].resolvedStatus = completed ? 'completed' : 'scheduled'
+    }
+    const groupSlug = slugify(g.name)
+    for (const m of ordered) {
+      if (m.resolvedStatus === 'completed') {
+        completedFixtures.push({
+          day,
+          slug: groupSlug,
+          groupName: g.name,
+          home: m.home,
+          away: m.away,
+          kickoff: m.kickoff,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+        })
+      }
+    }
+
     sql += `  insert into matches (age_group_id, home_team_id, away_team_id, home_score, away_score, court, kickoff_time, status) values\n`
     const rows = ordered.map((m) => {
       const hVar = teamVar[m.home]
@@ -521,6 +586,52 @@ const outPath = resolve(repoRoot, 'supabase', 'seed_real.sql')
 writeFileSync(outPath, sql)
 
 // ---------------------------------------------------------------------------
+// Emit a standalone scores-only SQL file. Runs against an already-seeded DB
+// (the matches must exist with null scores) and applies the same fictional
+// scores as seed_real.sql. Safe to re-run — the WHERE clauses match exactly
+// one row each, and repeated runs just re-apply the same values.
+// ---------------------------------------------------------------------------
+
+let scoresSql = `-- =============================================================================
+-- Fictional demo scores — standalone update script
+--
+-- Runs independently of seed_real.sql. Updates existing matches in place,
+-- setting home_score / away_score and flipping status to 'completed' for the
+-- demo result set. Safe to re-run (idempotent).
+--
+-- Saturday ${DEMO.allCompleteGroups.saturday} and Sunday ${DEMO.allCompleteGroups.sunday} are fully completed
+-- (trophy shows in standings); every other group has ~${Math.round(DEMO.partialFraction * 100)}% of matches
+-- completed, earliest kickoffs first.
+-- =============================================================================
+
+do $$
+declare
+  ag uuid; home_id uuid; away_id uuid;
+begin
+`
+
+for (const f of completedFixtures) {
+  scoresSql += `
+  select id into ag from age_groups where slug = '${f.slug}' and day = '${f.day}';
+  select id into home_id from teams where name = '${esc(f.home)}' and age_group_id = ag;
+  select id into away_id from teams where name = '${esc(f.away)}' and age_group_id = ag;
+  update matches
+    set home_score = ${f.homeScore}, away_score = ${f.awayScore}, status = 'completed'
+    where age_group_id = ag
+      and home_team_id = home_id
+      and away_team_id = away_id
+      and kickoff_time = '${f.kickoff} Europe/London'::timestamptz;
+`
+}
+
+scoresSql += `
+end $$;
+`
+
+const scoresPath = resolve(repoRoot, 'supabase', 'seed_scores.sql')
+writeFileSync(scoresPath, scoresSql)
+
+// ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
 
@@ -536,6 +647,8 @@ console.log(`Wrote ${outPath}`)
 console.log(`  ${totalGroups} age groups, ${totalTeams} teams, ${totalMatches} matches`)
 console.log(`  Saturday: CSV (${saturdayCsv})`)
 console.log(`  Sunday:   ${sundaySource}`)
+console.log(`Wrote ${scoresPath}`)
+console.log(`  ${completedFixtures.length} match score updates`)
 
 if (aliasLog.length) {
   console.log(`\nTeam-name aliases applied (${aliasLog.length}):`)
