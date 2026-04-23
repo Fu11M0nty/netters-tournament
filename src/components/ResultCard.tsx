@@ -151,26 +151,38 @@ export default function ResultCard({
         </div>
 
         {/* Score */}
-        <div className="flex shrink-0 items-center gap-2 self-center px-2">
-          <div className="flex flex-col items-center">
-            {homeLateApplied && (
-              <span className="text-xs font-medium text-zinc-400 line-through tabular-nums dark:text-zinc-600">
-                {homeRaw}
-              </span>
-            )}
+        <div className="flex shrink-0 items-end gap-2 self-center px-2">
+          <div className="flex flex-col items-center leading-none">
+            <span
+              aria-hidden={!homeLateApplied}
+              className={
+                'text-xs font-medium tabular-nums ' +
+                (homeLateApplied
+                  ? 'text-zinc-400 line-through dark:text-zinc-600'
+                  : 'invisible')
+              }
+            >
+              {homeLateApplied ? homeRaw : 0}
+            </span>
             <span className={homeWon ? winnerScoreClass : loserScoreClass}>
               {homeAdjusted}
             </span>
           </div>
-          <span className="self-center text-base text-zinc-300 dark:text-zinc-700">
+          <span className="pb-1 text-base text-zinc-300 dark:text-zinc-700">
             –
           </span>
-          <div className="flex flex-col items-center">
-            {awayLateApplied && (
-              <span className="text-xs font-medium text-zinc-400 line-through tabular-nums dark:text-zinc-600">
-                {awayRaw}
-              </span>
-            )}
+          <div className="flex flex-col items-center leading-none">
+            <span
+              aria-hidden={!awayLateApplied}
+              className={
+                'text-xs font-medium tabular-nums ' +
+                (awayLateApplied
+                  ? 'text-zinc-400 line-through dark:text-zinc-600'
+                  : 'invisible')
+              }
+            >
+              {awayLateApplied ? awayRaw : 0}
+            </span>
             <span className={awayWon ? winnerScoreClass : loserScoreClass}>
               {awayAdjusted}
             </span>
