@@ -53,21 +53,24 @@ export function calculateStandings(
     const away = stats.get(match.away_team_id)
     if (!home || !away) continue
 
+    const adjustedHome = match.home_score - 2 * match.home_late_minutes
+    const adjustedAway = match.away_score - 2 * match.away_late_minutes
+
     home.played += 1
     away.played += 1
-    home.goals_for += match.home_score
-    home.goals_against += match.away_score
-    away.goals_for += match.away_score
-    away.goals_against += match.home_score
+    home.goals_for += adjustedHome
+    home.goals_against += adjustedAway
+    away.goals_for += adjustedAway
+    away.goals_against += adjustedHome
 
-    const pts = pointsForMatch(match.home_score, match.away_score)
+    const pts = pointsForMatch(adjustedHome, adjustedAway)
     home.points += pts.home
     away.points += pts.away
 
-    if (match.home_score === match.away_score) {
+    if (adjustedHome === adjustedAway) {
       home.drawn += 1
       away.drawn += 1
-    } else if (match.home_score > match.away_score) {
+    } else if (adjustedHome > adjustedAway) {
       home.won += 1
       away.lost += 1
     } else {

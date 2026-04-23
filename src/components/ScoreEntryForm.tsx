@@ -260,40 +260,66 @@ export default function ScoreEntryForm({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label
-                htmlFor="home-score"
-                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {selectedHome.name}
-              </label>
-              <input
-                id="home-score"
-                type="number"
-                step="1"
-                inputMode="numeric"
-                value={homeScore}
-                onChange={(e) => setHomeScore(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="away-score"
-                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {selectedAway.name}
-              </label>
-              <input
-                id="away-score"
-                type="number"
-                step="1"
-                inputMode="numeric"
-                value={awayScore}
-                onChange={(e) => setAwayScore(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-              />
+          <div className="space-y-2">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Enter the on-court score. Any late-arrival deduction below is
+              applied automatically to the final recorded score.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  htmlFor="home-score"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {selectedHome.name}{' '}
+                  <span className="font-normal text-zinc-400">(on-court)</span>
+                </label>
+                <input
+                  id="home-score"
+                  type="number"
+                  step="1"
+                  inputMode="numeric"
+                  value={homeScore}
+                  onChange={(e) => setHomeScore(e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+                {parsedHomeLate > 0 && homeScore.trim() !== '' && (
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    Final:{' '}
+                    <span className="font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+                      {Number(homeScore) - parsedHomeLate * 2}
+                    </span>{' '}
+                    (−{parsedHomeLate * 2})
+                  </p>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="away-score"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {selectedAway.name}{' '}
+                  <span className="font-normal text-zinc-400">(on-court)</span>
+                </label>
+                <input
+                  id="away-score"
+                  type="number"
+                  step="1"
+                  inputMode="numeric"
+                  value={awayScore}
+                  onChange={(e) => setAwayScore(e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+                {parsedAwayLate > 0 && awayScore.trim() !== '' && (
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    Final:{' '}
+                    <span className="font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+                      {Number(awayScore) - parsedAwayLate * 2}
+                    </span>{' '}
+                    (−{parsedAwayLate * 2})
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

@@ -17,17 +17,20 @@ function PointsChip({ points }: { points: number }) {
   const base =
     'inline-flex shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide tabular-nums'
   const tone =
-    points === 5
+    points >= 5
       ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
-      : points === 0
-        ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-        : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
+      : points > 0
+        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
+        : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
+  const prefix = points > 0 ? '+' : points < 0 ? '−' : ''
+  const magnitude = Math.abs(points)
   return (
     <span
-      aria-label={`${points} ${points === 1 ? 'point' : 'points'} awarded`}
+      aria-label={`${points} ${Math.abs(points) === 1 ? 'point' : 'points'} awarded`}
       className={`${base} ${tone}`}
     >
-      +{points} pt{points === 1 ? '' : 's'}
+      {prefix}
+      {magnitude} pt{magnitude === 1 ? '' : 's'}
     </span>
   )
 }
@@ -69,11 +72,19 @@ export default function ResultCard({
   homeTeam,
   awayTeam,
 }: ResultCardProps) {
-  const homeScore = match.home_score ?? 0
-  const awayScore = match.away_score ?? 0
-  const homeWon = homeScore > awayScore
-  const awayWon = awayScore > homeScore
-  const points = pointsForMatch(homeScore, awayScore)
+  const homeRaw = match.home_score ?? 0
+  const awayRaw = match.away_score ?? 0
+  const homeAdjusted = homeRaw - 2 * match.home_late_minutes
+  const awayAdjusted = awayRaw - 2 * match.away_late_minutes
+  const homeLateApplied = match.home_late_minutes > 0
+  const awayLateApplied = match.away_late_minutes > 0
+  const homeWon = homeAdjusted > awayAdjusted
+  const awayWon = awayAdjusted > homeAdjusted
+  const basePoints = pointsForMatch(homeAdjusted, awayAdjusted)
+  const points = {
+    home: basePoints.home - (match.home_umpire_no_show ? 1 : 0),
+    away: basePoints.away - (match.away_umpire_no_show ? 1 : 0),
+  }
 
   const winnerScoreClass = 'text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 tabular-nums'
   const loserScoreClass = 'text-2xl font-semibold text-zinc-400 dark:text-zinc-600 tabular-nums'
@@ -107,13 +118,29 @@ export default function ResultCard({
 
         {/* Score */}
         <div className="flex shrink-0 items-center gap-2 self-center px-2">
-          <span className={homeWon ? winnerScoreClass : loserScoreClass}>
-            {homeScore}
+          <div className="flex flex-col items-center">
+            {homeLateApplied && (
+              <span className="text-xs font-medium text-zinc-400 line-through tabular-nums dark:text-zinc-600">
+                {homeRaw}
+              </span>
+            )}
+            <span className={homeWon ? winnerScoreClass : loserScoreClass}>
+              {homeAdjusted}
+            </span>
+          </div>
+          <span className="self-center text-base text-zinc-300 dark:text-zinc-700">
+            –
           </span>
-          <span className="text-base text-zinc-300 dark:text-zinc-700">–</span>
-          <span className={awayWon ? winnerScoreClass : loserScoreClass}>
-            {awayScore}
-          </span>
+          <div className="flex flex-col items-center">
+            {awayLateApplied && (
+              <span className="text-xs font-medium text-zinc-400 line-through tabular-nums dark:text-zinc-600">
+                {awayRaw}
+              </span>
+            )}
+            <span className={awayWon ? winnerScoreClass : loserScoreClass}>
+              {awayAdjusted}
+            </span>
+          </div>
         </div>
 
         {/* Away */}
