@@ -76,6 +76,8 @@ export default function ScoreEntryForm({
   const [awayUmpireNoShow, setAwayUmpireNoShow] = useState<boolean>(
     match.away_umpire_no_show
   )
+  const [homeNoShow, setHomeNoShow] = useState<boolean>(match.home_no_show)
+  const [awayNoShow, setAwayNoShow] = useState<boolean>(match.away_no_show)
   const [confirmChange, setConfirmChange] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -88,14 +90,36 @@ export default function ScoreEntryForm({
     if (side === 'home') {
       setHomeScore('0')
       setAwayScore('10')
+      setAwayMinsLate('')
     } else {
       setHomeScore('10')
       setAwayScore('0')
+      setHomeMinsLate('')
     }
-    setHomeMinsLate('')
-    setAwayMinsLate('')
     setStatus('completed')
-    toast.success(`Forfeit recorded — 10-0 to ${side === 'home' ? selectedAway.name : selectedHome.name}`)
+    toast.success(
+      `Forfeit recorded — 10-0 to ${side === 'home' ? selectedAway.name : selectedHome.name}`
+    )
+  }
+
+  function handleNoShowToggle(side: 'home' | 'away', checked: boolean) {
+    if (side === 'home') {
+      setHomeNoShow(checked)
+      if (checked) {
+        setHomeScore('0')
+        setAwayScore('10')
+        setHomeMinsLate('')
+        setStatus('completed')
+      }
+    } else {
+      setAwayNoShow(checked)
+      if (checked) {
+        setHomeScore('10')
+        setAwayScore('0')
+        setAwayMinsLate('')
+        setStatus('completed')
+      }
+    }
   }
 
   const scheduleChanged =
@@ -164,8 +188,10 @@ export default function ScoreEntryForm({
         away_team_id: awayTeamId,
         home_umpire_no_show: homeUmpireNoShow,
         away_umpire_no_show: awayUmpireNoShow,
-        home_late_minutes: parsedHomeLate,
-        away_late_minutes: parsedAwayLate,
+        home_late_minutes: homeNoShow ? 0 : parsedHomeLate,
+        away_late_minutes: awayNoShow ? 0 : parsedAwayLate,
+        home_no_show: homeNoShow,
+        away_no_show: awayNoShow,
       })
       .eq('id', match.id)
 
@@ -344,14 +370,26 @@ export default function ScoreEntryForm({
           <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
             <div className="flex items-baseline justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Late arrivals
+                Late arrivals & forfeits
               </p>
               <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                2 goals conceded per full minute · 4+ min = forfeit 10-0
+                2 goals/min · 4+ min or no-show = 10-0 forfeit
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
+                <label className="mb-2 flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200">
+                  <input
+                    type="checkbox"
+                    checked={homeNoShow}
+                    onChange={(e) => handleNoShowToggle('home', e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-400 text-mk-red focus:ring-mk-red"
+                  />
+                  <span>
+                    <span className="font-medium">{selectedHome.name}</span>{' '}
+                    did not turn up (no show)
+                  </span>
+                </label>
                 <label
                   htmlFor="home-late"
                   className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300"
@@ -364,22 +402,40 @@ export default function ScoreEntryForm({
                   min="0"
                   step="1"
                   inputMode="numeric"
-                  value={homeMinsLate}
+                  value={homeNoShow ? '' : homeMinsLate}
+                  disabled={homeNoShow}
                   onChange={(e) => setHomeMinsLate(e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
                 />
-                {parsedHomeLate > 0 && !homeForfeit && (
+                {homeNoShow && (
+                  <p className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                    Forfeit (no show) — 10-0 to {selectedAway.name}
+                  </p>
+                )}
+                {!homeNoShow && parsedHomeLate > 0 && !homeForfeit && (
                   <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     concedes {parsedHomeLate * 2} goals
                   </p>
                 )}
-                {homeForfeit && (
+                {!homeNoShow && homeForfeit && (
                   <p className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
-                    Forfeit — 10-0 to {selectedAway.name}
+                    Forfeit (late) — 10-0 to {selectedAway.name}
                   </p>
                 )}
               </div>
               <div>
+                <label className="mb-2 flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200">
+                  <input
+                    type="checkbox"
+                    checked={awayNoShow}
+                    onChange={(e) => handleNoShowToggle('away', e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-400 text-mk-red focus:ring-mk-red"
+                  />
+                  <span>
+                    <span className="font-medium">{selectedAway.name}</span>{' '}
+                    did not turn up (no show)
+                  </span>
+                </label>
                 <label
                   htmlFor="away-late"
                   className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300"
@@ -392,18 +448,24 @@ export default function ScoreEntryForm({
                   min="0"
                   step="1"
                   inputMode="numeric"
-                  value={awayMinsLate}
+                  value={awayNoShow ? '' : awayMinsLate}
+                  disabled={awayNoShow}
                   onChange={(e) => setAwayMinsLate(e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
                 />
-                {parsedAwayLate > 0 && !awayForfeit && (
+                {awayNoShow && (
+                  <p className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                    Forfeit (no show) — 10-0 to {selectedHome.name}
+                  </p>
+                )}
+                {!awayNoShow && parsedAwayLate > 0 && !awayForfeit && (
                   <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     concedes {parsedAwayLate * 2} goals
                   </p>
                 )}
-                {awayForfeit && (
+                {!awayNoShow && awayForfeit && (
                   <p className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
-                    Forfeit — 10-0 to {selectedHome.name}
+                    Forfeit (late) — 10-0 to {selectedHome.name}
                   </p>
                 )}
               </div>

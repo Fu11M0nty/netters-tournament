@@ -54,6 +54,8 @@ create table matches (
   away_umpire_no_show boolean not null default false,
   home_late_minutes int not null default 0,
   away_late_minutes int not null default 0,
+  home_no_show boolean not null default false,
+  away_no_show boolean not null default false,
   created_at    timestamptz not null default now(),
   check (home_team_id <> away_team_id),
   check (status in ('scheduled', 'completed')),

@@ -1,5 +1,18 @@
 import type { Match, StandingRow, Team } from './types'
 
+export type ForfeitReason = 'no_show' | 'late'
+
+export function forfeitSide(match: Match): {
+  side: 'home' | 'away' | null
+  reason: ForfeitReason | null
+} {
+  if (match.home_no_show) return { side: 'home', reason: 'no_show' }
+  if (match.away_no_show) return { side: 'away', reason: 'no_show' }
+  if (match.home_late_minutes >= 4) return { side: 'home', reason: 'late' }
+  if (match.away_late_minutes >= 4) return { side: 'away', reason: 'late' }
+  return { side: null, reason: null }
+}
+
 export function pointsForMatch(
   homeScore: number,
   awayScore: number
@@ -53,8 +66,15 @@ export function calculateStandings(
     const away = stats.get(match.away_team_id)
     if (!home || !away) continue
 
-    const adjustedHome = match.home_score - 2 * match.home_late_minutes
-    const adjustedAway = match.away_score - 2 * match.away_late_minutes
+    const { side: forfeitedSide } = forfeitSide(match)
+    const adjustedHome =
+      forfeitedSide !== null
+        ? match.home_score
+        : match.home_score - 2 * match.home_late_minutes
+    const adjustedAway =
+      forfeitedSide !== null
+        ? match.away_score
+        : match.away_score - 2 * match.away_late_minutes
 
     home.played += 1
     away.played += 1

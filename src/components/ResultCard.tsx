@@ -1,4 +1,4 @@
-import { pointsForMatch } from '@/lib/standings'
+import { forfeitSide, pointsForMatch } from '@/lib/standings'
 import TeamLogo from './TeamLogo'
 import { formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
@@ -38,16 +38,42 @@ function PointsChip({ points }: { points: number }) {
 function PenaltyBadges({
   lateMinutes,
   umpireNoShow,
+  forfeitNoShow,
+  forfeitLate,
 }: {
   lateMinutes: number
   umpireNoShow: boolean
+  forfeitNoShow: boolean
+  forfeitLate: boolean
 }) {
-  if (lateMinutes <= 0 && !umpireNoShow) return null
+  if (
+    lateMinutes <= 0 &&
+    !umpireNoShow &&
+    !forfeitNoShow &&
+    !forfeitLate
+  )
+    return null
   const base =
     'inline-flex shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide tabular-nums'
   return (
     <div className="mt-1 flex flex-wrap justify-center gap-1">
-      {lateMinutes > 0 && (
+      {forfeitNoShow && (
+        <span
+          title="Team did not turn up — match forfeited 10-0"
+          className={`${base} bg-red-600 text-white`}
+        >
+          Forfeit · no show
+        </span>
+      )}
+      {forfeitLate && (
+        <span
+          title={`Team was ${lateMinutes} minutes late — match forfeited 10-0`}
+          className={`${base} bg-red-600 text-white`}
+        >
+          Forfeit · {lateMinutes}+ min late
+        </span>
+      )}
+      {!forfeitLate && !forfeitNoShow && lateMinutes > 0 && (
         <span
           title={`Conceded ${lateMinutes * 2} goals for arriving ${lateMinutes} min late`}
           className={`${base} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300`}
@@ -74,10 +100,16 @@ export default function ResultCard({
 }: ResultCardProps) {
   const homeRaw = match.home_score ?? 0
   const awayRaw = match.away_score ?? 0
-  const homeAdjusted = homeRaw - 2 * match.home_late_minutes
-  const awayAdjusted = awayRaw - 2 * match.away_late_minutes
-  const homeLateApplied = match.home_late_minutes > 0
-  const awayLateApplied = match.away_late_minutes > 0
+  const forfeit = forfeitSide(match)
+  const isForfeit = forfeit.side !== null
+  const homeAdjusted = isForfeit
+    ? homeRaw
+    : homeRaw - 2 * match.home_late_minutes
+  const awayAdjusted = isForfeit
+    ? awayRaw
+    : awayRaw - 2 * match.away_late_minutes
+  const homeLateApplied = !isForfeit && match.home_late_minutes > 0
+  const awayLateApplied = !isForfeit && match.away_late_minutes > 0
   const homeWon = homeAdjusted > awayAdjusted
   const awayWon = awayAdjusted > homeAdjusted
   const basePoints = pointsForMatch(homeAdjusted, awayAdjusted)
@@ -112,6 +144,8 @@ export default function ResultCard({
             <PenaltyBadges
               lateMinutes={match.home_late_minutes}
               umpireNoShow={match.home_umpire_no_show}
+              forfeitNoShow={match.home_no_show}
+              forfeitLate={forfeit.side === 'home' && forfeit.reason === 'late'}
             />
           </div>
         </div>
@@ -163,16 +197,25 @@ export default function ResultCard({
             <PenaltyBadges
               lateMinutes={match.away_late_minutes}
               umpireNoShow={match.away_umpire_no_show}
+              forfeitNoShow={match.away_no_show}
+              forfeitLate={forfeit.side === 'away' && forfeit.reason === 'late'}
             />
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-center gap-2 border-t border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium text-zinc-500 dark:border-zinc-900 dark:bg-zinc-900/50 dark:text-zinc-400">
-        <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Full time
-        </span>
+        {isForfeit ? (
+          <span className="inline-flex items-center gap-1 font-semibold text-red-700 dark:text-red-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            Forfeit · {forfeit.reason === 'no_show' ? 'no show' : '4+ min late'}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Full time
+          </span>
+        )}
         <span aria-hidden="true">·</span>
         <span>{formatKickoff(match.kickoff_time)}</span>
         {match.court && (

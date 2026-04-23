@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import ScoreEntryForm from './ScoreEntryForm'
 import TeamLogo from './TeamLogo'
+import { forfeitSide } from '@/lib/standings'
 import { formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
 
@@ -153,6 +154,7 @@ export default function AdminMatchList({
             : '–'
 
           const isDuplicate = duplicateIds.has(match.id)
+          const forfeit = forfeitSide(match)
           return (
             <li
               key={match.id}
@@ -174,6 +176,14 @@ export default function AdminMatchList({
                 {isDuplicate && (
                   <span className="mr-2 rounded-sm bg-fuchsia-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                     Duplicate
+                  </span>
+                )}
+                {forfeit.side !== null && (
+                  <span
+                    title={`Forfeit — ${forfeit.reason === 'no_show' ? 'no show' : '4+ min late'}`}
+                    className="mr-2 rounded-sm bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                  >
+                    Forfeit {forfeit.reason === 'no_show' ? '· no show' : '· late'}
                   </span>
                 )}
                 <span className="font-medium">{home.name}</span>

@@ -33,6 +33,8 @@ export interface Match {
   away_umpire_no_show: boolean
   home_late_minutes: number
   away_late_minutes: number
+  home_no_show: boolean
+  away_no_show: boolean
 }
 
 export interface StandingRow {
