@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import TeamEditForm from './TeamEditForm'
-import TeamLogo from './TeamLogo'
+import TeamLogoDropzone from './TeamLogoDropzone'
 import type { Team } from '@/lib/types'
 
 interface AdminTeamListProps {
@@ -43,7 +43,7 @@ export default function AdminTeamList({
             key={team.id}
             className="flex items-center gap-3 px-4 py-3"
           >
-            <TeamLogo team={team} size="md" />
+            <TeamLogoDropzone team={team} size="md" onSaved={onSaved} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {team.name}
