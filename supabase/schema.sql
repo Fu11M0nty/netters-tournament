@@ -52,9 +52,13 @@ create table matches (
   status        text not null default 'scheduled',
   home_umpire_no_show boolean not null default false,
   away_umpire_no_show boolean not null default false,
+  home_late_minutes int not null default 0,
+  away_late_minutes int not null default 0,
   created_at    timestamptz not null default now(),
   check (home_team_id <> away_team_id),
-  check (status in ('scheduled', 'completed'))
+  check (status in ('scheduled', 'completed')),
+  check (home_late_minutes >= 0),
+  check (away_late_minutes >= 0)
 );
 
 create index matches_age_group_id_idx on matches(age_group_id);

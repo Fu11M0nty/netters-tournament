@@ -32,6 +32,38 @@ function PointsChip({ points }: { points: number }) {
   )
 }
 
+function PenaltyBadges({
+  lateMinutes,
+  umpireNoShow,
+}: {
+  lateMinutes: number
+  umpireNoShow: boolean
+}) {
+  if (lateMinutes <= 0 && !umpireNoShow) return null
+  const base =
+    'inline-flex shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide tabular-nums'
+  return (
+    <div className="mt-1 flex flex-wrap justify-center gap-1">
+      {lateMinutes > 0 && (
+        <span
+          title={`Conceded ${lateMinutes * 2} goals for arriving ${lateMinutes} min late`}
+          className={`${base} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300`}
+        >
+          −{lateMinutes * 2} goals · {lateMinutes} min late
+        </span>
+      )}
+      {umpireNoShow && (
+        <span
+          title="−1 point deduction: team did not provide an umpire"
+          className={`${base} bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300`}
+        >
+          −1 pt · no umpire
+        </span>
+      )}
+    </div>
+  )
+}
+
 export default function ResultCard({
   match,
   homeTeam,
@@ -66,6 +98,10 @@ export default function ResultCard({
             <div className="mt-1 flex justify-center">
               <PointsChip points={points.home} />
             </div>
+            <PenaltyBadges
+              lateMinutes={match.home_late_minutes}
+              umpireNoShow={match.home_umpire_no_show}
+            />
           </div>
         </div>
 
@@ -97,6 +133,10 @@ export default function ResultCard({
             <div className="mt-1 flex justify-center">
               <PointsChip points={points.away} />
             </div>
+            <PenaltyBadges
+              lateMinutes={match.away_late_minutes}
+              umpireNoShow={match.away_umpire_no_show}
+            />
           </div>
         </div>
       </div>

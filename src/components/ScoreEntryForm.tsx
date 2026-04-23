@@ -64,8 +64,12 @@ export default function ScoreEntryForm({
   const [court, setCourt] = useState<string>(originalCourt)
   const [homeTeamId, setHomeTeamId] = useState<string>(originalHomeId)
   const [awayTeamId, setAwayTeamId] = useState<string>(originalAwayId)
-  const [homeMinsLate, setHomeMinsLate] = useState<string>('')
-  const [awayMinsLate, setAwayMinsLate] = useState<string>('')
+  const [homeMinsLate, setHomeMinsLate] = useState<string>(
+    match.home_late_minutes > 0 ? String(match.home_late_minutes) : ''
+  )
+  const [awayMinsLate, setAwayMinsLate] = useState<string>(
+    match.away_late_minutes > 0 ? String(match.away_late_minutes) : ''
+  )
   const [homeUmpireNoShow, setHomeUmpireNoShow] = useState<boolean>(
     match.home_umpire_no_show
   )
@@ -79,18 +83,6 @@ export default function ScoreEntryForm({
   const parsedAwayLate = Math.max(0, Math.floor(Number(awayMinsLate) || 0))
   const homeForfeit = parsedHomeLate >= 4
   const awayForfeit = parsedAwayLate >= 4
-  const anyLateness = parsedHomeLate > 0 || parsedAwayLate > 0
-
-  function applyLatePenalty() {
-    const currentHome = Number(homeScore) || 0
-    const currentAway = Number(awayScore) || 0
-    setHomeScore(String(currentHome - parsedHomeLate * 2))
-    setAwayScore(String(currentAway - parsedAwayLate * 2))
-    setHomeMinsLate('')
-    setAwayMinsLate('')
-    setStatus('completed')
-    toast.success('Late-arrival penalty applied')
-  }
 
   function applyForfeit(side: 'home' | 'away') {
     if (side === 'home') {
@@ -172,6 +164,8 @@ export default function ScoreEntryForm({
         away_team_id: awayTeamId,
         home_umpire_no_show: homeUmpireNoShow,
         away_umpire_no_show: awayUmpireNoShow,
+        home_late_minutes: parsedHomeLate,
+        away_late_minutes: parsedAwayLate,
       })
       .eq('id', match.id)
 
@@ -389,15 +383,6 @@ export default function ScoreEntryForm({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {anyLateness && !homeForfeit && !awayForfeit && (
-                <button
-                  type="button"
-                  onClick={applyLatePenalty}
-                  className="rounded-md border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm transition-colors hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-200 dark:hover:bg-amber-900/60"
-                >
-                  Apply penalty to score
-                </button>
-              )}
               {homeForfeit && (
                 <button
                   type="button"
