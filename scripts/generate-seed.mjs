@@ -93,7 +93,7 @@ const tournament = {
         start: '09:00',
         teams: [
           'MK Dons', 'Magic', 'Blaze Elite', 'Eagles', 'Real Beds', 'Poole',
-          'Swan', 'AP Saints', 'Barr Beacon', 'Hatfield',
+          'Swan', 'Barr Beacon', 'Hatfield',
         ],
       },
       {
@@ -153,6 +153,7 @@ const ALIASES = {
       'bb sparklers': 'BB U13 Sparklers',
       'rv leapers': 'Rv Leapers',
       'olney galxy': 'Olney Galaxy',
+      'turnford': 'Sparks',
     },
     "Under 14's": {
       'jms white': "JM's White",

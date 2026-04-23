@@ -149,6 +149,7 @@ export default function AdminMatchList({
           match={editingMatch}
           homeTeam={editingHome}
           awayTeam={editingAway}
+          teams={teams}
           ageGroupName={ageGroupName}
           onSave={() => {
             setEditingId(null)

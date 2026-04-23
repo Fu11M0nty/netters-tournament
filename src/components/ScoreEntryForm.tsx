@@ -14,6 +14,7 @@ interface ScoreEntryFormProps {
   match: Match
   homeTeam: Team
   awayTeam: Team
+  teams: Team[]
   ageGroupName: string
   onSave: () => void
   onCancel: () => void
@@ -32,12 +33,25 @@ export default function ScoreEntryForm({
   match,
   homeTeam,
   awayTeam,
+  teams,
   ageGroupName,
   onSave,
   onCancel,
 }: ScoreEntryFormProps) {
   const originalTime = useMemo(() => getLondonTimeHHmm(match.kickoff_time), [match.kickoff_time])
   const originalCourt = match.court ?? ''
+  const originalHomeId = match.home_team_id
+  const originalAwayId = match.away_team_id
+
+  const sortedTeams = useMemo(
+    () => [...teams].sort((a, b) => a.name.localeCompare(b.name)),
+    [teams]
+  )
+  const teamById = useMemo(() => {
+    const map = new Map<string, Team>()
+    for (const t of teams) map.set(t.id, t)
+    return map
+  }, [teams])
 
   const [homeScore, setHomeScore] = useState<string>(
     match.home_score !== null ? String(match.home_score) : ''
@@ -48,16 +62,26 @@ export default function ScoreEntryForm({
   const [status, setStatus] = useState<MatchStatus>(match.status)
   const [kickoffTime, setKickoffTime] = useState<string>(originalTime)
   const [court, setCourt] = useState<string>(originalCourt)
-  const [confirmScheduleChange, setConfirmScheduleChange] = useState(false)
+  const [homeTeamId, setHomeTeamId] = useState<string>(originalHomeId)
+  const [awayTeamId, setAwayTeamId] = useState<string>(originalAwayId)
+  const [confirmChange, setConfirmChange] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const scheduleChanged =
     kickoffTime !== originalTime || court.trim() !== originalCourt.trim()
+  const teamsChanged =
+    homeTeamId !== originalHomeId || awayTeamId !== originalAwayId
+  const anyChange = scheduleChanged || teamsChanged
+  const sameTeamSelected = homeTeamId === awayTeamId
+
+  const selectedHome = teamById.get(homeTeamId) ?? homeTeam
+  const selectedAway = teamById.get(awayTeamId) ?? awayTeam
 
   const submitDisabled =
     saving ||
     kickoffTime.trim() === '' ||
-    (scheduleChanged && !confirmScheduleChange)
+    sameTeamSelected ||
+    (anyChange && !confirmChange)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -95,6 +119,11 @@ export default function ScoreEntryForm({
       return
     }
 
+    if (homeTeamId === awayTeamId) {
+      toast.error('Home and away teams must be different.')
+      return
+    }
+
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase
@@ -105,6 +134,8 @@ export default function ScoreEntryForm({
         status,
         kickoff_time: buildIsoFromLondonTime(match.kickoff_time, kickoffTime),
         court: court.trim() === '' ? null : court.trim(),
+        home_team_id: homeTeamId,
+        away_team_id: awayTeamId,
       })
       .eq('id', match.id)
 
@@ -115,7 +146,7 @@ export default function ScoreEntryForm({
       return
     }
 
-    toast.success(scheduleChanged ? 'Match updated (schedule changed)' : 'Score saved')
+    toast.success(anyChange ? 'Match updated (fixture changed)' : 'Score saved')
     onSave()
   }
 
@@ -138,7 +169,7 @@ export default function ScoreEntryForm({
             id="score-entry-title"
             className="mt-1 text-base font-bold text-zinc-900 dark:text-zinc-50"
           >
-            {homeTeam.name} vs {awayTeam.name}
+            {selectedHome.name} vs {selectedAway.name}
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {formatLocalDate(match.kickoff_time)}
@@ -146,13 +177,66 @@ export default function ScoreEntryForm({
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Teams
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  htmlFor="home-team"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Home
+                </label>
+                <select
+                  id="home-team"
+                  value={homeTeamId}
+                  onChange={(e) => setHomeTeamId(e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                >
+                  {sortedTeams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="away-team"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Away
+                </label>
+                <select
+                  id="away-team"
+                  value={awayTeamId}
+                  onChange={(e) => setAwayTeamId(e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                >
+                  {sortedTeams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {sameTeamSelected && (
+              <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+                Home and away teams must be different.
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
                 htmlFor="home-score"
                 className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                {homeTeam.name}
+                {selectedHome.name}
               </label>
               <input
                 id="home-score"
@@ -170,7 +254,7 @@ export default function ScoreEntryForm({
                 htmlFor="away-score"
                 className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                {awayTeam.name}
+                {selectedAway.name}
               </label>
               <input
                 id="away-score"
@@ -246,26 +330,48 @@ export default function ScoreEntryForm({
               </div>
             </div>
 
-            {scheduleChanged && (
-              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-200">
-                <p className="font-semibold">Schedule change detected</p>
-                <p className="mt-1">
-                  Changing the time or court may clash with other fixtures on
-                  the same court or leave a team double-booked. Confirm the
-                  change is intentional before saving.
-                </p>
-                <label className="mt-2 flex items-start gap-2">
-                  <input
-                    type="checkbox"
-                    checked={confirmScheduleChange}
-                    onChange={(e) => setConfirmScheduleChange(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-amber-400 text-mk-red focus:ring-mk-red"
-                  />
-                  <span>I have checked for conflicts and want to apply this change.</span>
-                </label>
-              </div>
-            )}
           </div>
+
+          {anyChange && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-200">
+              <p className="font-semibold">Fixture change detected</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                {teamsChanged && (
+                  <li>
+                    Teams: {homeTeam.name} vs {awayTeam.name} →{' '}
+                    <span className="font-semibold">
+                      {selectedHome.name} vs {selectedAway.name}
+                    </span>
+                  </li>
+                )}
+                {kickoffTime !== originalTime && (
+                  <li>
+                    Kickoff: {originalTime} →{' '}
+                    <span className="font-semibold">{kickoffTime}</span>
+                  </li>
+                )}
+                {court.trim() !== originalCourt.trim() && (
+                  <li>
+                    Court: {originalCourt || '—'} →{' '}
+                    <span className="font-semibold">{court || '—'}</span>
+                  </li>
+                )}
+              </ul>
+              <p className="mt-2">
+                Changes may create duplicate or missing fixtures, court clashes,
+                or back-to-back games. Confirm this is intentional before saving.
+              </p>
+              <label className="mt-2 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={confirmChange}
+                  onChange={(e) => setConfirmChange(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-amber-400 text-mk-red focus:ring-mk-red"
+                />
+                <span>I have checked for conflicts and want to apply this change.</span>
+              </label>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-2">
             <button
