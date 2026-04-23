@@ -29,6 +29,8 @@ export interface Match {
   court: string | null
   kickoff_time: string
   status: MatchStatus
+  home_umpire_no_show: boolean
+  away_umpire_no_show: boolean
 }
 
 export interface StandingRow {

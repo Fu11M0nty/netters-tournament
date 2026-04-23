@@ -177,8 +177,24 @@ export default function AdminMatchList({
                   </span>
                 )}
                 <span className="font-medium">{home.name}</span>
+                {match.home_umpire_no_show && (
+                  <span
+                    title={`${home.name} did not provide an umpire — −1 pt`}
+                    className="ml-1 rounded-sm bg-red-600 px-1 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                  >
+                    −1
+                  </span>
+                )}
                 <span className="mx-2 text-zinc-400">vs</span>
                 <span className="font-medium">{away.name}</span>
+                {match.away_umpire_no_show && (
+                  <span
+                    title={`${away.name} did not provide an umpire — −1 pt`}
+                    className="ml-1 rounded-sm bg-red-600 px-1 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                  >
+                    −1
+                  </span>
+                )}
               </div>
 
               <div className="flex shrink-0 items-center gap-3 sm:w-auto">

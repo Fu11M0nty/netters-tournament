@@ -64,8 +64,47 @@ export default function ScoreEntryForm({
   const [court, setCourt] = useState<string>(originalCourt)
   const [homeTeamId, setHomeTeamId] = useState<string>(originalHomeId)
   const [awayTeamId, setAwayTeamId] = useState<string>(originalAwayId)
+  const [homeMinsLate, setHomeMinsLate] = useState<string>('')
+  const [awayMinsLate, setAwayMinsLate] = useState<string>('')
+  const [homeUmpireNoShow, setHomeUmpireNoShow] = useState<boolean>(
+    match.home_umpire_no_show
+  )
+  const [awayUmpireNoShow, setAwayUmpireNoShow] = useState<boolean>(
+    match.away_umpire_no_show
+  )
   const [confirmChange, setConfirmChange] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  const parsedHomeLate = Math.max(0, Math.floor(Number(homeMinsLate) || 0))
+  const parsedAwayLate = Math.max(0, Math.floor(Number(awayMinsLate) || 0))
+  const homeForfeit = parsedHomeLate >= 4
+  const awayForfeit = parsedAwayLate >= 4
+  const anyLateness = parsedHomeLate > 0 || parsedAwayLate > 0
+
+  function applyLatePenalty() {
+    const currentHome = Number(homeScore) || 0
+    const currentAway = Number(awayScore) || 0
+    setHomeScore(String(currentHome - parsedHomeLate * 2))
+    setAwayScore(String(currentAway - parsedAwayLate * 2))
+    setHomeMinsLate('')
+    setAwayMinsLate('')
+    setStatus('completed')
+    toast.success('Late-arrival penalty applied')
+  }
+
+  function applyForfeit(side: 'home' | 'away') {
+    if (side === 'home') {
+      setHomeScore('0')
+      setAwayScore('10')
+    } else {
+      setHomeScore('10')
+      setAwayScore('0')
+    }
+    setHomeMinsLate('')
+    setAwayMinsLate('')
+    setStatus('completed')
+    toast.success(`Forfeit recorded — 10-0 to ${side === 'home' ? selectedAway.name : selectedHome.name}`)
+  }
 
   const scheduleChanged =
     kickoffTime !== originalTime || court.trim() !== originalCourt.trim()
@@ -101,13 +140,8 @@ export default function ScoreEntryForm({
     if (homeProvided && awayProvided) {
       const home = Number(homeTrim)
       const away = Number(awayTrim)
-      if (
-        !Number.isInteger(home) ||
-        !Number.isInteger(away) ||
-        home < 0 ||
-        away < 0
-      ) {
-        toast.error('Scores must be non-negative whole numbers.')
+      if (!Number.isInteger(home) || !Number.isInteger(away)) {
+        toast.error('Scores must be whole numbers.')
         return
       }
       homeValue = home
@@ -136,6 +170,8 @@ export default function ScoreEntryForm({
         court: court.trim() === '' ? null : court.trim(),
         home_team_id: homeTeamId,
         away_team_id: awayTeamId,
+        home_umpire_no_show: homeUmpireNoShow,
+        away_umpire_no_show: awayUmpireNoShow,
       })
       .eq('id', match.id)
 
@@ -241,7 +277,6 @@ export default function ScoreEntryForm({
               <input
                 id="home-score"
                 type="number"
-                min="0"
                 step="1"
                 inputMode="numeric"
                 value={homeScore}
@@ -259,7 +294,6 @@ export default function ScoreEntryForm({
               <input
                 id="away-score"
                 type="number"
-                min="0"
                 step="1"
                 inputMode="numeric"
                 value={awayScore}
@@ -285,6 +319,151 @@ export default function ScoreEntryForm({
               <option value="scheduled">Scheduled</option>
               <option value="completed">Completed</option>
             </select>
+          </div>
+
+          <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Late arrivals
+              </p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                2 goals conceded per full minute · 4+ min = forfeit 10-0
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  htmlFor="home-late"
+                  className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {selectedHome.name} — mins late
+                </label>
+                <input
+                  id="home-late"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  value={homeMinsLate}
+                  onChange={(e) => setHomeMinsLate(e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+                {parsedHomeLate > 0 && !homeForfeit && (
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    concedes {parsedHomeLate * 2} goals
+                  </p>
+                )}
+                {homeForfeit && (
+                  <p className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                    Forfeit — 10-0 to {selectedAway.name}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="away-late"
+                  className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {selectedAway.name} — mins late
+                </label>
+                <input
+                  id="away-late"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  value={awayMinsLate}
+                  onChange={(e) => setAwayMinsLate(e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+                {parsedAwayLate > 0 && !awayForfeit && (
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    concedes {parsedAwayLate * 2} goals
+                  </p>
+                )}
+                {awayForfeit && (
+                  <p className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                    Forfeit — 10-0 to {selectedHome.name}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {anyLateness && !homeForfeit && !awayForfeit && (
+                <button
+                  type="button"
+                  onClick={applyLatePenalty}
+                  className="rounded-md border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm transition-colors hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-200 dark:hover:bg-amber-900/60"
+                >
+                  Apply penalty to score
+                </button>
+              )}
+              {homeForfeit && (
+                <button
+                  type="button"
+                  onClick={() => applyForfeit('home')}
+                  className="rounded-md border border-red-400 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-900 shadow-sm transition-colors hover:bg-red-100 dark:border-red-700 dark:bg-red-950/60 dark:text-red-200 dark:hover:bg-red-900/60"
+                >
+                  Record forfeit vs {selectedHome.name}
+                </button>
+              )}
+              {awayForfeit && (
+                <button
+                  type="button"
+                  onClick={() => applyForfeit('away')}
+                  className="rounded-md border border-red-400 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-900 shadow-sm transition-colors hover:bg-red-100 dark:border-red-700 dark:bg-red-950/60 dark:text-red-200 dark:hover:bg-red-900/60"
+                >
+                  Record forfeit vs {selectedAway.name}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Umpires
+              </p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                No umpire provided = −1 pt deduction
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-start gap-2 text-sm text-zinc-800 dark:text-zinc-200">
+                <input
+                  type="checkbox"
+                  checked={homeUmpireNoShow}
+                  onChange={(e) => setHomeUmpireNoShow(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-400 text-mk-red focus:ring-mk-red"
+                />
+                <span>
+                  <span className="font-medium">{selectedHome.name}</span>{' '}
+                  did not provide an umpire
+                  {homeUmpireNoShow && (
+                    <span className="ml-2 rounded-sm bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      −1 pt
+                    </span>
+                  )}
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm text-zinc-800 dark:text-zinc-200">
+                <input
+                  type="checkbox"
+                  checked={awayUmpireNoShow}
+                  onChange={(e) => setAwayUmpireNoShow(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-400 text-mk-red focus:ring-mk-red"
+                />
+                <span>
+                  <span className="font-medium">{selectedAway.name}</span>{' '}
+                  did not provide an umpire
+                  {awayUmpireNoShow && (
+                    <span className="ml-2 rounded-sm bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      −1 pt
+                    </span>
+                  )}
+                </span>
+              </label>
+            </div>
           </div>
 
           <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">

@@ -50,10 +50,10 @@ create table matches (
   court         text,
   kickoff_time  timestamptz not null,
   status        text not null default 'scheduled',
+  home_umpire_no_show boolean not null default false,
+  away_umpire_no_show boolean not null default false,
   created_at    timestamptz not null default now(),
   check (home_team_id <> away_team_id),
-  check (home_score is null or home_score >= 0),
-  check (away_score is null or away_score >= 0),
   check (status in ('scheduled', 'completed'))
 );
 

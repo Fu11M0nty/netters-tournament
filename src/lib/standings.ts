@@ -76,6 +76,13 @@ export function calculateStandings(
     }
   }
 
+  for (const match of matches) {
+    const home = stats.get(match.home_team_id)
+    const away = stats.get(match.away_team_id)
+    if (home && match.home_umpire_no_show) home.points -= 1
+    if (away && match.away_umpire_no_show) away.points -= 1
+  }
+
   const rows = Array.from(stats.values()).map((s) => {
     const goal_difference = s.goals_for - s.goals_against
     return {
