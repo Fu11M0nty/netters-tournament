@@ -35,6 +35,7 @@ export interface Match {
   away_late_minutes: number
   home_no_show: boolean
   away_no_show: boolean
+  scoresheet_url: string | null
 }
 
 export interface StandingRow {

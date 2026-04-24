@@ -1,14 +1,18 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase'
+import { compressImage } from '@/lib/image'
 import {
   buildIsoFromLondonTime,
   formatKickoffDate,
   getLondonTimeHHmm,
 } from '@/lib/time'
 import type { Match, MatchStatus, Team } from '@/lib/types'
+
+const SCORESHEET_BUCKET = 'scoresheets'
+const MAX_SCORESHEET_SOURCE_BYTES = 20 * 1024 * 1024 // 20 MB raw camera input
 
 interface ScoreEntryFormProps {
   match: Match
@@ -78,8 +82,13 @@ export default function ScoreEntryForm({
   )
   const [homeNoShow, setHomeNoShow] = useState<boolean>(match.home_no_show)
   const [awayNoShow, setAwayNoShow] = useState<boolean>(match.away_no_show)
+  const [scoresheetUrl, setScoresheetUrl] = useState<string | null>(
+    match.scoresheet_url
+  )
+  const [uploadingSheet, setUploadingSheet] = useState(false)
   const [confirmChange, setConfirmChange] = useState(false)
   const [saving, setSaving] = useState(false)
+  const sheetInputRef = useRef<HTMLInputElement>(null)
 
   const parsedHomeLate = Math.max(0, Math.floor(Number(homeMinsLate) || 0))
   const parsedAwayLate = Math.max(0, Math.floor(Number(awayMinsLate) || 0))
@@ -100,6 +109,50 @@ export default function ScoreEntryForm({
     toast.success(
       `Forfeit recorded — 10-0 to ${side === 'home' ? selectedAway.name : selectedHome.name}`
     )
+  }
+
+  async function handleScoresheetFile(file: File) {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file.')
+      return
+    }
+    if (file.size > MAX_SCORESHEET_SOURCE_BYTES) {
+      toast.error('Source image too large (max 20 MB).')
+      return
+    }
+
+    setUploadingSheet(true)
+    try {
+      const compressed = await compressImage(file, 960, 0.5)
+      const supabase = createClient()
+      const path = `${match.id}/${Date.now()}.jpg`
+      const { error: uploadError } = await supabase.storage
+        .from(SCORESHEET_BUCKET)
+        .upload(path, compressed, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/jpeg',
+        })
+      if (uploadError) {
+        toast.error(`Upload failed: ${uploadError.message}`)
+        return
+      }
+      const { data: publicUrl } = supabase.storage
+        .from(SCORESHEET_BUCKET)
+        .getPublicUrl(path)
+      setScoresheetUrl(publicUrl.publicUrl)
+      toast.success(`Scoresheet uploaded (${Math.round(compressed.size / 1024)} KB)`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploadingSheet(false)
+    }
+  }
+
+  function handleScoresheetChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) void handleScoresheetFile(file)
   }
 
   function handleNoShowToggle(side: 'home' | 'away', checked: boolean) {
@@ -134,6 +187,7 @@ export default function ScoreEntryForm({
 
   const submitDisabled =
     saving ||
+    uploadingSheet ||
     kickoffTime.trim() === '' ||
     sameTeamSelected ||
     (anyChange && !confirmChange)
@@ -192,6 +246,7 @@ export default function ScoreEntryForm({
         away_late_minutes: awayNoShow ? 0 : parsedAwayLate,
         home_no_show: homeNoShow,
         away_no_show: awayNoShow,
+        scoresheet_url: scoresheetUrl,
       })
       .eq('id', match.id)
 
@@ -537,6 +592,75 @@ export default function ScoreEntryForm({
                 </span>
               </label>
             </div>
+          </div>
+
+          <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Scoresheet
+              </p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                Photo of the umpire&apos;s paper scoresheet
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              {scoresheetUrl ? (
+                <a
+                  href={scoresheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open scoresheet in new tab"
+                  className="block shrink-0 overflow-hidden rounded-md border border-zinc-300 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={scoresheetUrl}
+                    alt="Scoresheet"
+                    className="h-20 w-20 object-cover"
+                  />
+                </a>
+              ) : (
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-dashed border-zinc-300 bg-white text-[10px] font-medium uppercase tracking-wide text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500">
+                  No sheet
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => sheetInputRef.current?.click()}
+                  disabled={uploadingSheet}
+                  className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                >
+                  {uploadingSheet
+                    ? 'Uploading…'
+                    : scoresheetUrl
+                      ? 'Replace'
+                      : 'Capture / upload'}
+                </button>
+                {scoresheetUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setScoresheetUrl(null)}
+                    disabled={uploadingSheet}
+                    className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50 disabled:opacity-60 dark:border-red-900 dark:bg-zinc-900 dark:text-red-400 dark:hover:bg-red-950"
+                  >
+                    Remove
+                  </button>
+                )}
+                <input
+                  ref={sheetInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleScoresheetChange}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+              Images are resized to 960&nbsp;px &amp; re-encoded as JPEG 50% on
+              upload — typical size 60-120&nbsp;KB.
+            </p>
           </div>
 
           <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">

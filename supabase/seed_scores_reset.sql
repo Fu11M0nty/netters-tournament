@@ -16,4 +16,5 @@ update matches
       home_late_minutes = 0,
       away_late_minutes = 0,
       home_no_show = false,
-      away_no_show = false;
+      away_no_show = false,
+      scoresheet_url = null;

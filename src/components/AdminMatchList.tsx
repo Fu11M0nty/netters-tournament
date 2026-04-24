@@ -149,12 +149,21 @@ export default function AdminMatchList({
 
           const hasScore =
             match.home_score !== null && match.away_score !== null
-          const scoreLabel = hasScore
-            ? `${match.home_score} – ${match.away_score}`
-            : '–'
-
           const isDuplicate = duplicateIds.has(match.id)
           const forfeit = forfeitSide(match)
+          const homeRaw = match.home_score ?? 0
+          const awayRaw = match.away_score ?? 0
+          const lateAdjustmentApplies = forfeit.side === null
+          const homeAdjusted = lateAdjustmentApplies
+            ? homeRaw - 2 * match.home_late_minutes
+            : homeRaw
+          const awayAdjusted = lateAdjustmentApplies
+            ? awayRaw - 2 * match.away_late_minutes
+            : awayRaw
+          const homeLateApplied =
+            lateAdjustmentApplies && match.home_late_minutes > 0
+          const awayLateApplied =
+            lateAdjustmentApplies && match.away_late_minutes > 0
           return (
             <li
               key={match.id}
@@ -208,15 +217,54 @@ export default function AdminMatchList({
               </div>
 
               <div className="flex shrink-0 items-center gap-3 sm:w-auto">
-                <span
-                  className={
-                    hasScore
-                      ? 'rounded-md bg-zinc-100 px-2.5 py-1 text-sm font-semibold tabular-nums text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50'
-                      : 'rounded-md bg-zinc-50 px-2.5 py-1 text-sm text-zinc-400 dark:bg-zinc-900 dark:text-zinc-600'
-                  }
-                >
-                  {scoreLabel}
-                </span>
+                {hasScore ? (
+                  <span
+                    title={
+                      homeLateApplied || awayLateApplied
+                        ? `On-court ${homeRaw}–${awayRaw}, adjusted ${homeAdjusted}–${awayAdjusted} after late-arrival deduction`
+                        : undefined
+                    }
+                    className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2.5 py-1 text-sm font-semibold tabular-nums text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50"
+                  >
+                    {homeLateApplied && (
+                      <span className="text-xs font-medium text-zinc-400 line-through dark:text-zinc-600">
+                        {homeRaw}
+                      </span>
+                    )}
+                    <span>{homeAdjusted}</span>
+                    <span className="text-zinc-400">–</span>
+                    <span>{awayAdjusted}</span>
+                    {awayLateApplied && (
+                      <span className="text-xs font-medium text-zinc-400 line-through dark:text-zinc-600">
+                        {awayRaw}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="rounded-md bg-zinc-50 px-2.5 py-1 text-sm text-zinc-400 dark:bg-zinc-900 dark:text-zinc-600">
+                    –
+                  </span>
+                )}
+                {(homeLateApplied || awayLateApplied) && (
+                  <span
+                    title={[
+                      homeLateApplied
+                        ? `${home.name}: −${match.home_late_minutes * 2} goals (${match.home_late_minutes} min late)`
+                        : null,
+                      awayLateApplied
+                        ? `${away.name}: −${match.away_late_minutes * 2} goals (${match.away_late_minutes} min late)`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                  >
+                    −
+                    {(homeLateApplied ? match.home_late_minutes * 2 : 0) +
+                      (awayLateApplied ? match.away_late_minutes * 2 : 0)}{' '}
+                    goals late
+                  </span>
+                )}
                 <span
                   className={
                     match.status === 'completed'
@@ -226,6 +274,22 @@ export default function AdminMatchList({
                 >
                   {match.status === 'completed' ? 'Completed' : 'Scheduled'}
                 </span>
+                {match.scoresheet_url && (
+                  <a
+                    href={match.scoresheet_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View scoresheet photo"
+                    className="block shrink-0 overflow-hidden rounded-md border border-zinc-300 bg-white shadow-sm hover:ring-2 hover:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={match.scoresheet_url}
+                      alt="Scoresheet"
+                      className="h-8 w-8 object-cover"
+                    />
+                  </a>
+                )}
                 <button
                   type="button"
                   onClick={() => setEditingId(match.id)}
