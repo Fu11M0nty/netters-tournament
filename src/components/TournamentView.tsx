@@ -65,7 +65,7 @@ export default function TournamentView({
   const completedCount = matches.filter((m) => m.status === 'completed').length
 
   return (
-    <main className="mx-auto w-full max-w-5xl pb-16">
+    <main data-pdf-root className="mx-auto w-full max-w-5xl pb-16">
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-mk-ink via-mk-ink-soft to-mk-ink text-white">
         <div
@@ -107,7 +107,7 @@ export default function TournamentView({
             )}
             {allComplete && (
               <span data-print-hide className="ml-auto">
-                <PrintButton />
+                <PrintButton ageGroupName={currentGroup.name} day={day} />
               </span>
             )}
           </div>
