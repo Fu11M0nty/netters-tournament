@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import ScoreEntryForm from './ScoreEntryForm'
 import TeamLogo from './TeamLogo'
+import MatchScoresheetCapture from './MatchScoresheetCapture'
 import { forfeitSide } from '@/lib/standings'
 import { formatKickoffTime } from '@/lib/time'
 import type { Match, Team } from '@/lib/types'
@@ -274,22 +275,7 @@ export default function AdminMatchList({
                 >
                   {match.status === 'completed' ? 'Completed' : 'Scheduled'}
                 </span>
-                {match.scoresheet_url && (
-                  <a
-                    href={match.scoresheet_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="View scoresheet photo"
-                    className="block shrink-0 overflow-hidden rounded-md border border-zinc-300 bg-white shadow-sm hover:ring-2 hover:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={match.scoresheet_url}
-                      alt="Scoresheet"
-                      className="h-8 w-8 object-cover"
-                    />
-                  </a>
-                )}
+                <MatchScoresheetCapture match={match} onUploaded={onSaved} />
                 <button
                   type="button"
                   onClick={() => setEditingId(match.id)}
