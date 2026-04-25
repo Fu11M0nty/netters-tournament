@@ -67,7 +67,7 @@ export default function TournamentView({
   return (
     <main data-pdf-root className="mx-auto w-full max-w-5xl pb-16">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-mk-ink via-mk-ink-soft to-mk-ink text-white">
+      <section data-pdf-block className="relative overflow-hidden bg-gradient-to-br from-mk-ink via-mk-ink-soft to-mk-ink text-white">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-mk-red/30 blur-3xl"
@@ -129,7 +129,7 @@ export default function TournamentView({
         </h2>
       </header>
 
-      <section aria-labelledby="standings-heading" className="px-4 pb-8 sm:px-6">
+      <section data-pdf-block aria-labelledby="standings-heading" className="px-4 pb-8 sm:px-6">
         <h3
           id="standings-heading"
           className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-mk-red"
@@ -164,6 +164,7 @@ export default function TournamentView({
       <section aria-labelledby="results-heading" className="px-4 pb-8 sm:px-6">
         <h3
           id="results-heading"
+          data-pdf-block
           className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-mk-red"
         >
           <span className="h-px flex-1 bg-mk-red/30" />
@@ -171,7 +172,7 @@ export default function TournamentView({
           <span className="h-px flex-1 bg-mk-red/30" />
         </h3>
         {results.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-mk-ink/15 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+          <p data-pdf-block className="rounded-2xl border border-dashed border-mk-ink/15 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
             {activeTeamId ? 'No results for this team yet' : 'No results yet'}
           </p>
         ) : (
@@ -181,7 +182,7 @@ export default function TournamentView({
               const away = teamById.get(match.away_team_id)
               if (!home || !away) return null
               return (
-                <li key={match.id}>
+                <li key={match.id} data-pdf-block>
                   <ResultCard match={match} homeTeam={home} awayTeam={away} />
                 </li>
               )
@@ -193,6 +194,7 @@ export default function TournamentView({
       <section aria-labelledby="fixtures-heading" className="px-4 pb-10 sm:px-6">
         <h3
           id="fixtures-heading"
+          data-pdf-block
           className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-mk-red"
         >
           <span className="h-px flex-1 bg-mk-red/30" />
@@ -200,7 +202,7 @@ export default function TournamentView({
           <span className="h-px flex-1 bg-mk-red/30" />
         </h3>
         {fixtures.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-mk-ink/15 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+          <p data-pdf-block className="rounded-2xl border border-dashed border-mk-ink/15 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
             {activeTeamId
               ? 'No upcoming fixtures for this team'
               : 'All matches complete'}
@@ -212,7 +214,7 @@ export default function TournamentView({
               const away = teamById.get(match.away_team_id)
               if (!home || !away) return null
               return (
-                <li key={match.id}>
+                <li key={match.id} data-pdf-block>
                   <FixtureCard match={match} homeTeam={home} awayTeam={away} />
                 </li>
               )

@@ -48,12 +48,13 @@ export default function PrintButton({
         import('jspdf'),
       ])
 
-      const canvas = await html2canvas(target, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        logging: false,
-      })
+      const blocks = Array.from(
+        target.querySelectorAll<HTMLElement>('[data-pdf-block]')
+      )
+      if (blocks.length === 0) {
+        toast.error('Nothing to export.')
+        return
+      }
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -62,19 +63,55 @@ export default function PrintButton({
       })
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = pageWidth
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      const imgData = canvas.toDataURL('image/jpeg', 0.85)
+      const margin = 24
+      const usableWidth = pageWidth - 2 * margin
+      const usableHeight = pageHeight - 2 * margin
+      const blockGap = 8
+      let cursorY = margin
+      let firstOnPage = true
 
-      let heightLeft = imgHeight
-      let position = 0
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight
+      for (const block of blocks) {
+        const canvas = await html2canvas(block, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          logging: false,
+        })
+        const imgData = canvas.toDataURL('image/jpeg', 0.85)
+        const imgHeight = (canvas.height * usableWidth) / canvas.width
+
+        if (imgHeight > usableHeight) {
+          // Block is taller than a full page — slice it across pages.
+          if (!firstOnPage) {
+            pdf.addPage()
+          }
+          let drawn = 0
+          while (drawn < imgHeight) {
+            if (drawn > 0) pdf.addPage()
+            pdf.addImage(
+              imgData,
+              'JPEG',
+              margin,
+              margin - drawn,
+              usableWidth,
+              imgHeight
+            )
+            drawn += usableHeight
+          }
+          cursorY = margin
+          firstOnPage = true
+          continue
+        }
+
+        if (!firstOnPage && cursorY + imgHeight > margin + usableHeight) {
+          pdf.addPage()
+          cursorY = margin
+          firstOnPage = true
+        }
+
+        pdf.addImage(imgData, 'JPEG', margin, cursorY, usableWidth, imgHeight)
+        cursorY += imgHeight + blockGap
+        firstOnPage = false
       }
 
       const dayLabel = day === 'saturday' ? 'Saturday' : 'Sunday'
