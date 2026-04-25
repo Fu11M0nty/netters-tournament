@@ -5,6 +5,7 @@ import StandingsTable from './StandingsTable'
 import ResultCard from './ResultCard'
 import FixtureCard from './FixtureCard'
 import TeamFilter from './TeamFilter'
+import PrintButton from './PrintButton'
 import type { AgeGroup, Day, Match, Team } from '@/lib/types'
 
 interface TournamentViewProps {
@@ -91,7 +92,7 @@ export default function TournamentView({
             MK Dons. Live standings, results and fixtures — refresh any time
             for the latest from courtside.
           </p>
-          <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-semibold">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-white/90 ring-1 ring-white/15">
               <span className="text-mk-gold">{teams.length}</span> teams
             </span>
@@ -104,11 +105,16 @@ export default function TournamentView({
                 🏆 Group complete
               </span>
             )}
+            {allComplete && (
+              <span data-print-hide className="ml-auto">
+                <PrintButton />
+              </span>
+            )}
           </div>
         </div>
       </section>
 
-      <div className="bg-white shadow-sm dark:bg-zinc-950">
+      <div data-print-hide className="bg-white shadow-sm dark:bg-zinc-950">
         <DayTabs days={[saturdayGroups, sundayGroups]} currentDay={day} />
         <AgeGroupTabs
           ageGroups={ageGroupsForDay}
@@ -137,6 +143,7 @@ export default function TournamentView({
 
       <section
         aria-labelledby="filter-heading"
+        data-print-hide
         className="px-4 pb-6 sm:px-6"
       >
         <h3

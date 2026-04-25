@@ -33,3 +33,32 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
+
+@media print {
+  /* Print-friendly: white background, no shadows, keep cards intact */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  [data-print-hide] {
+    display: none !important;
+  }
+  /* Avoid splitting result/fixture cards across pages */
+  article,
+  li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Drop animated backgrounds — they print as black blocks */
+  .bg-gradient-to-br {
+    background: #ffffff !important;
+    color: #0b1221 !important;
+  }
+  .bg-gradient-to-br * {
+    color: #0b1221 !important;
+  }
+  /* Make sure standings table fits on the page */
+  table {
+    font-size: 10pt;
+  }
+}

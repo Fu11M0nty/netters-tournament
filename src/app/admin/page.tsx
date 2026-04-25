@@ -30,6 +30,7 @@ export default function AdminPage() {
   const [loadingGroups, setLoadingGroups] = useState(true)
   const [loadingMatches, setLoadingMatches] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [backingUp, setBackingUp] = useState(false)
   const [view, setView] = useState<AdminView>('matches')
 
   useEffect(() => {
@@ -141,6 +142,19 @@ export default function AdminPage() {
     await Promise.all([loadMatches(), loadDayMatches()])
   }, [loadMatches, loadDayMatches])
 
+  async function handleBackup() {
+    setBackingUp(true)
+    const { data, error } = await supabase.rpc('backup_matches')
+    setBackingUp(false)
+    if (error) {
+      toast.error(`Backup failed: ${error.message}`)
+      return
+    }
+    const row = Array.isArray(data) ? data[0] : data
+    const count = row?.rows_backed_up ?? 0
+    toast.success(`Snapshot saved — ${count} matches`)
+  }
+
   async function handleSignOut() {
     setSigningOut(true)
     const { error } = await supabase.auth.signOut()
@@ -164,14 +178,25 @@ export default function AdminPage() {
             Enter and edit match scores
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          {signingOut ? 'Signing out…' : 'Sign out'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleBackup}
+            disabled={backingUp}
+            title="Take a one-click snapshot of all matches into matches_backup"
+            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            {backingUp ? 'Backing up…' : 'Backup matches'}
+          </button>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </div>
       </header>
 
       <nav
