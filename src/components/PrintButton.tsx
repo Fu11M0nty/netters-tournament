@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import type { Day } from '@/lib/types'
 
 interface PrintButtonProps {
+  tournamentSlug: string
   ageGroupName: string
   day: Day
   label?: string
@@ -20,6 +21,7 @@ function sanitizeFilenameSegment(s: string): string {
 }
 
 export default function PrintButton({
+  tournamentSlug,
   ageGroupName,
   day,
   label = 'Download PDF',
@@ -115,7 +117,9 @@ export default function PrintButton({
       }
 
       const dayLabel = day === 'saturday' ? 'Saturday' : 'Sunday'
-      const filename = `MK-Netters-and-MK-Dons-Tournament-2026-${dayLabel}-${sanitizeFilenameSegment(ageGroupName)}.pdf`
+      const filename = `MK-Netters-and-MK-Dons-${sanitizeFilenameSegment(
+        tournamentSlug
+      )}-${dayLabel}-${sanitizeFilenameSegment(ageGroupName)}.pdf`
       pdf.save(filename)
     } catch (err) {
       toast.error(

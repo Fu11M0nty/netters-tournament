@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import TeamEditForm from './TeamEditForm'
 import TeamLogoDropzone from './TeamLogoDropzone'
+import TeamPlayersDialog from './TeamPlayersDialog'
 import type { Team } from '@/lib/types'
 
 interface AdminTeamListProps {
@@ -17,6 +18,7 @@ export default function AdminTeamList({
   onSaved,
 }: AdminTeamListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [playersTeamId, setPlayersTeamId] = useState<string | null>(null)
 
   const sorted = useMemo(
     () => [...teams].sort((a, b) => a.name.localeCompare(b.name)),
@@ -25,6 +27,9 @@ export default function AdminTeamList({
 
   const editingTeam = editingId
     ? sorted.find((t) => t.id === editingId) ?? null
+    : null
+  const playersTeam = playersTeamId
+    ? sorted.find((t) => t.id === playersTeamId) ?? null
     : null
 
   if (sorted.length === 0) {
@@ -67,6 +72,13 @@ export default function AdminTeamList({
             </div>
             <button
               type="button"
+              onClick={() => setPlayersTeamId(team.id)}
+              className="rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              Players
+            </button>
+            <button
+              type="button"
               onClick={() => setEditingId(team.id)}
               className="rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
@@ -85,6 +97,12 @@ export default function AdminTeamList({
             onSaved()
           }}
           onCancel={() => setEditingId(null)}
+        />
+      )}
+      {playersTeam && (
+        <TeamPlayersDialog
+          team={playersTeam}
+          onClose={() => setPlayersTeamId(null)}
         />
       )}
     </>

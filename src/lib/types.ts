@@ -1,11 +1,49 @@
 export type Day = 'saturday' | 'sunday'
 
+export type TournamentStatus = 'upcoming' | 'live' | 'complete'
+
+export interface Tournament {
+  id: string
+  slug: string
+  name: string
+  start_date: string | null
+  end_date: string | null
+  status: TournamentStatus
+  display_order: number
+  courts: string[]
+  schedule_locked: boolean
+}
+
 export interface AgeGroup {
   id: string
+  tournament_id: string
   name: string
   slug: string
   day: Day
   display_order: number
+  gender: string | null
+  skill_level: string | null
+}
+
+export interface Player {
+  id: string
+  team_id: string
+  name: string
+  dob: string | null
+  registration_no: string | null
+  notes: string | null
+  display_order: number
+}
+
+export interface ScheduleEvent {
+  id: string
+  tournament_id: string
+  name: string
+  start_time: string
+  end_time: string
+  court: string | null
+  color: string | null
+  notes: string | null
 }
 
 export interface Team {
@@ -36,6 +74,8 @@ export interface Match {
   home_no_show: boolean
   away_no_show: boolean
   scoresheet_url: string | null
+  duration_minutes: number
+  is_planned: boolean
 }
 
 export interface StandingRow {

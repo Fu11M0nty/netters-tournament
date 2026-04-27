@@ -1,15 +1,19 @@
 import { createServerSupabaseClient } from '@/lib/supabase'
 import TournamentView from '@/components/TournamentView'
 import NotFoundMessage from '@/components/NotFoundMessage'
-import type { AgeGroup, Day, Match, Team } from '@/lib/types'
+import type { AgeGroup, Day, Match, Team, Tournament } from '@/lib/types'
 
 interface Props {
-  params: Promise<{ day: string; ageGroupSlug: string }>
+  params: Promise<{
+    tournamentSlug: string
+    day: string
+    ageGroupSlug: string
+  }>
   searchParams: Promise<{ team?: string | string[] }>
 }
 
 export default async function AgeGroupPage({ params, searchParams }: Props) {
-  const { day, ageGroupSlug } = await params
+  const { tournamentSlug, day, ageGroupSlug } = await params
   const { team: teamParam } = await searchParams
   const teamFilterId = typeof teamParam === 'string' ? teamParam : null
 
@@ -19,9 +23,26 @@ export default async function AgeGroupPage({ params, searchParams }: Props) {
 
   const supabase = await createServerSupabaseClient()
 
+  const { data: tournamentData } = await supabase
+    .from('tournaments')
+    .select('*')
+    .eq('slug', tournamentSlug)
+    .maybeSingle()
+
+  const tournament = tournamentData as Tournament | null
+  if (!tournament) {
+    return (
+      <NotFoundMessage
+        title="Tournament not found"
+        description={`There is no tournament with slug "${tournamentSlug}".`}
+      />
+    )
+  }
+
   const { data: allGroupsData } = await supabase
     .from('age_groups')
     .select('*')
+    .eq('tournament_id', tournament.id)
     .order('display_order', { ascending: true })
 
   const allGroups: AgeGroup[] = allGroupsData ?? []
@@ -58,6 +79,7 @@ export default async function AgeGroupPage({ params, searchParams }: Props) {
 
   return (
     <TournamentView
+      tournament={tournament}
       day={day as Day}
       currentGroup={currentGroup}
       saturdayGroups={saturdayGroups}

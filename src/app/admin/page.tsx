@@ -6,8 +6,13 @@ import toast from 'react-hot-toast'
 import AdminMatchList from '@/components/AdminMatchList'
 import AdminTeamList from '@/components/AdminTeamList'
 import AdminFixtureMatrix from '@/components/AdminFixtureMatrix'
+import AdminTournamentList from '@/components/AdminTournamentList'
+import AdminImport from '@/components/AdminImport'
+import AdminScheduleView from '@/components/AdminScheduleView'
 import { createClient } from '@/lib/supabase'
-import type { AgeGroup, Day, Match, Team } from '@/lib/types'
+import type { AgeGroup, Day, Match, Team, Tournament } from '@/lib/types'
+
+const ACTIVE_TOURNAMENT_KEY = 'mk-admin-active-tournament'
 
 type AdminView = 'matches' | 'matrix' | 'teams'
 
@@ -21,6 +26,9 @@ export default function AdminPage() {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
 
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [tournamentId, setTournamentId] = useState<string | null>(null)
+  const [loadingTournaments, setLoadingTournaments] = useState(true)
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>([])
   const [day, setDay] = useState<Day>('saturday')
   const [currentGroupId, setCurrentGroupId] = useState<string | null>(null)
@@ -32,13 +40,64 @@ export default function AdminPage() {
   const [signingOut, setSigningOut] = useState(false)
   const [backingUp, setBackingUp] = useState(false)
   const [view, setView] = useState<AdminView>('matches')
+  const [showTournamentManager, setShowTournamentManager] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+
+  const loadTournaments = useCallback(async () => {
+    setLoadingTournaments(true)
+    const { data, error } = await supabase
+      .from('tournaments')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('start_date', { ascending: false })
+
+    if (error) {
+      toast.error(`Could not load tournaments: ${error.message}`)
+      setLoadingTournaments(false)
+      return [] as Tournament[]
+    }
+    const list = (data ?? []) as Tournament[]
+    setTournaments(list)
+    setLoadingTournaments(false)
+
+    setTournamentId((current) => {
+      if (current && list.some((t) => t.id === current)) return current
+      const stored =
+        typeof window !== 'undefined'
+          ? window.localStorage.getItem(ACTIVE_TOURNAMENT_KEY)
+          : null
+      const valid =
+        stored && list.some((t) => t.id === stored) ? stored : null
+      return valid ?? list[0]?.id ?? null
+    })
+
+    return list
+  }, [supabase])
+
+  useEffect(() => {
+    loadTournaments()
+  }, [loadTournaments])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (tournamentId) {
+      window.localStorage.setItem(ACTIVE_TOURNAMENT_KEY, tournamentId)
+    }
+  }, [tournamentId])
 
   useEffect(() => {
     let cancelled = false
     async function loadGroups() {
+      if (!tournamentId) {
+        setAgeGroups([])
+        setLoadingGroups(false)
+        return
+      }
+      setLoadingGroups(true)
       const { data, error } = await supabase
         .from('age_groups')
         .select('*')
+        .eq('tournament_id', tournamentId)
         .order('display_order', { ascending: true })
 
       if (cancelled) return
@@ -54,7 +113,7 @@ export default function AdminPage() {
     return () => {
       cancelled = true
     }
-  }, [supabase])
+  }, [supabase, tournamentId])
 
   const groupsForDay = useMemo(
     () => ageGroups.filter((g) => g.day === day),
@@ -168,8 +227,8 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl bg-zinc-50 pb-16 dark:bg-zinc-950">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+    <main className="mx-auto min-h-screen w-full max-w-7xl bg-zinc-50 pb-16 dark:bg-zinc-950">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
         <div>
           <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
             Admin console
@@ -178,7 +237,55 @@ export default function AdminPage() {
             Enter and edit match scores
           </p>
         </div>
+        <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <span>Tournament</span>
+          <select
+            value={tournamentId ?? ''}
+            onChange={(e) => setTournamentId(e.target.value || null)}
+            disabled={loadingTournaments || tournaments.length === 0}
+            className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm font-semibold text-zinc-800 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          >
+            {tournaments.length === 0 && (
+              <option value="">
+                {loadingTournaments ? 'Loading…' : 'No tournaments'}
+              </option>
+            )}
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setShowTournamentManager((s) => !s)
+              setShowImport(false)
+            }}
+            className={
+              showTournamentManager
+                ? 'rounded-md border border-mk-red bg-mk-red px-3 py-1.5 text-sm font-semibold text-white shadow-sm'
+                : 'rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+            }
+          >
+            {showTournamentManager ? 'Back to scoring' : 'Manage tournaments'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowImport((s) => !s)
+              setShowTournamentManager(false)
+            }}
+            className={
+              showImport
+                ? 'rounded-md border border-mk-red bg-mk-red px-3 py-1.5 text-sm font-semibold text-white shadow-sm'
+                : 'rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+            }
+          >
+            {showImport ? 'Back to scoring' : 'Bulk import'}
+          </button>
           <button
             type="button"
             onClick={handleBackup}
@@ -199,6 +306,34 @@ export default function AdminPage() {
         </div>
       </header>
 
+      {showTournamentManager ? (
+        <section className="px-4 pt-5">
+          <AdminTournamentList
+            tournaments={tournaments}
+            onChanged={loadTournaments}
+          />
+        </section>
+      ) : showImport ? (
+        <section className="px-4 pt-5">
+          {tournamentId &&
+          tournaments.find((t) => t.id === tournamentId) ? (
+            <AdminImport
+              tournament={tournaments.find((t) => t.id === tournamentId)!}
+              ageGroups={ageGroups}
+              onClose={() => setShowImport(false)}
+              onImported={() => {
+                loadMatches()
+                loadDayMatches()
+              }}
+            />
+          ) : (
+            <p className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+              Select a tournament before importing.
+            </p>
+          )}
+        </section>
+      ) : (
+      <>
       <nav
         aria-label="Tournament day"
         className="flex gap-2 border-b border-zinc-200 bg-white px-4 pt-3 dark:border-zinc-800 dark:bg-zinc-950"
@@ -324,6 +459,8 @@ export default function AdminPage() {
           )
         )}
       </section>
+      </>
+      )}
     </main>
   )
 }

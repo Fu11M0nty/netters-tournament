@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { AgeGroup, Day } from '@/lib/types'
 
 interface DayTabsProps {
+  tournamentSlug: string
   days: AgeGroup[][]
   currentDay: Day
 }
@@ -11,7 +12,7 @@ const TABS: { day: Day; label: string }[] = [
   { day: 'sunday', label: 'Sunday' },
 ]
 
-export default function DayTabs({ days, currentDay }: DayTabsProps) {
+export default function DayTabs({ tournamentSlug, days, currentDay }: DayTabsProps) {
   const hasGroups = (day: Day) => {
     const idx = day === 'saturday' ? 0 : 1
     return (days[idx]?.length ?? 0) > 0
@@ -44,7 +45,7 @@ export default function DayTabs({ days, currentDay }: DayTabsProps) {
         return (
           <Link
             key={day}
-            href={`/${day}`}
+            href={`/${tournamentSlug}/${day}`}
             className={classes}
             aria-current={active ? 'page' : undefined}
           >

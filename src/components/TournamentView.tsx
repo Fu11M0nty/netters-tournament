@@ -6,9 +6,10 @@ import ResultCard from './ResultCard'
 import FixtureCard from './FixtureCard'
 import TeamFilter from './TeamFilter'
 import PrintButton from './PrintButton'
-import type { AgeGroup, Day, Match, Team } from '@/lib/types'
+import type { AgeGroup, Day, Match, Team, Tournament } from '@/lib/types'
 
 interface TournamentViewProps {
+  tournament: Tournament
   day: Day
   currentGroup: AgeGroup
   saturdayGroups: AgeGroup[]
@@ -19,6 +20,7 @@ interface TournamentViewProps {
 }
 
 export default function TournamentView({
+  tournament,
   day,
   currentGroup,
   saturdayGroups,
@@ -54,7 +56,7 @@ export default function TournamentView({
     )
 
   const fixtures = matchesForLists
-    .filter((m) => m.status === 'scheduled')
+    .filter((m) => m.status === 'scheduled' && m.is_planned)
     .sort(
       (a, b) =>
         new Date(a.kickoff_time).getTime() -
@@ -107,7 +109,11 @@ export default function TournamentView({
             )}
             {allComplete && (
               <span data-print-hide className="ml-auto">
-                <PrintButton ageGroupName={currentGroup.name} day={day} />
+                <PrintButton
+                  tournamentSlug={tournament.slug}
+                  ageGroupName={currentGroup.name}
+                  day={day}
+                />
               </span>
             )}
           </div>
@@ -115,8 +121,13 @@ export default function TournamentView({
       </section>
 
       <div data-print-hide className="bg-white shadow-sm dark:bg-zinc-950">
-        <DayTabs days={[saturdayGroups, sundayGroups]} currentDay={day} />
+        <DayTabs
+          tournamentSlug={tournament.slug}
+          days={[saturdayGroups, sundayGroups]}
+          currentDay={day}
+        />
         <AgeGroupTabs
+          tournamentSlug={tournament.slug}
           ageGroups={ageGroupsForDay}
           currentSlug={currentGroup.slug}
           day={day}
@@ -155,7 +166,7 @@ export default function TournamentView({
           <span className="h-px flex-1 bg-mk-red/30" />
         </h3>
         <TeamFilter
-          pathname={`/${day}/${currentGroup.slug}`}
+          pathname={`/${tournament.slug}/${day}/${currentGroup.slug}`}
           teams={teams}
           currentTeamId={activeTeamId}
         />

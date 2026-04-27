@@ -2,12 +2,14 @@ import Link from 'next/link'
 import type { AgeGroup, Day } from '@/lib/types'
 
 interface AgeGroupTabsProps {
+  tournamentSlug: string
   ageGroups: AgeGroup[]
   currentSlug: string
   day: Day
 }
 
 export default function AgeGroupTabs({
+  tournamentSlug,
   ageGroups,
   currentSlug,
   day,
@@ -35,7 +37,7 @@ export default function AgeGroupTabs({
           return (
             <li key={group.id} className="inline-block shrink-0">
               <Link
-                href={`/${day}/${group.slug}`}
+                href={`/${tournamentSlug}/${day}/${group.slug}`}
                 aria-current={active ? 'page' : undefined}
                 className={
                   active

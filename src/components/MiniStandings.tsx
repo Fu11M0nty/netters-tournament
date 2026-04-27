@@ -3,12 +3,14 @@ import TeamLogo from './TeamLogo'
 import type { AgeGroup, Match, StandingRow } from '@/lib/types'
 
 interface MiniStandingsProps {
+  tournamentSlug: string
   group: AgeGroup
   standings: StandingRow[]
   matches: Match[]
 }
 
 export default function MiniStandings({
+  tournamentSlug,
   group,
   standings,
   matches,
@@ -22,7 +24,7 @@ export default function MiniStandings({
 
   return (
     <Link
-      href={`/${group.day}/${group.slug}`}
+      href={`/${tournamentSlug}/${group.day}/${group.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-mk-ink/15 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-mk-red hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-mk-red"
     >
       <header className="flex items-baseline justify-between gap-2 border-b border-mk-ink/10 bg-mk-cream/50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/40">
