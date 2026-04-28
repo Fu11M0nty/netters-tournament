@@ -31,7 +31,7 @@ as $$
 declare
   source_id uuid;
   source_start date;
-  new_id uuid;
+  new_tournament_id uuid;
   date_offset interval := interval '0';
 begin
   if new_status not in ('upcoming', 'live', 'complete') then
@@ -53,34 +53,35 @@ begin
       new_slug, new_name, new_start_date, new_end_date, new_status,
       (select coalesce(max(display_order), 0) + 1 from tournaments)
     )
-    returning id into new_id;
+    returning id into new_tournament_id;
 
   if new_start_date is not null and source_start is not null then
     date_offset := new_start_date - source_start;
   end if;
 
-  -- Map old age_group ids → new ids
-  create temp table _ag_map (old_id uuid, new_id uuid) on commit drop;
-  insert into _ag_map(old_id, new_id)
+  -- Map old age_group ids → new ids (use distinct column names to avoid
+  -- ambiguity with the new_tournament_id local variable in later inserts).
+  create temp table _ag_map (old_id uuid, mapped_id uuid) on commit drop;
+  insert into _ag_map(old_id, mapped_id)
     select id, gen_random_uuid()
     from age_groups
     where tournament_id = source_id;
 
   insert into age_groups (id, tournament_id, name, slug, day, display_order)
-    select m.new_id, new_id, ag.name, ag.slug, ag.day, ag.display_order
+    select m.mapped_id, new_tournament_id, ag.name, ag.slug, ag.day, ag.display_order
     from age_groups ag
     join _ag_map m on m.old_id = ag.id
     where ag.tournament_id = source_id;
 
   -- Map old team ids → new ids
-  create temp table _team_map (old_id uuid, new_id uuid) on commit drop;
-  insert into _team_map(old_id, new_id)
+  create temp table _team_map (old_id uuid, mapped_id uuid) on commit drop;
+  insert into _team_map(old_id, mapped_id)
     select t.id, gen_random_uuid()
     from teams t
     join _ag_map m on m.old_id = t.age_group_id;
 
   insert into teams (id, name, short_name, color, logo_url, age_group_id)
-    select tm.new_id, t.name, t.short_name, t.color, t.logo_url, agm.new_id
+    select tm.mapped_id, t.name, t.short_name, t.color, t.logo_url, agm.mapped_id
     from teams t
     join _team_map tm on tm.old_id = t.id
     join _ag_map agm on agm.old_id = t.age_group_id;
@@ -94,7 +95,7 @@ begin
     home_no_show, away_no_show, scoresheet_url
   )
   select
-    agm.new_id, htm.new_id, atm.new_id,
+    agm.mapped_id, htm.mapped_id, atm.mapped_id,
     null, null, ma.court, ma.kickoff_time + date_offset, 'scheduled',
     false, false, 0, 0, false, false, null
   from matches ma
@@ -102,7 +103,7 @@ begin
   join _team_map htm on htm.old_id = ma.home_team_id
   join _team_map atm on atm.old_id = ma.away_team_id;
 
-  return new_id;
+  return new_tournament_id;
 end;
 $$;
 

@@ -9,6 +9,7 @@ import AdminFixtureMatrix from '@/components/AdminFixtureMatrix'
 import AdminTournamentList from '@/components/AdminTournamentList'
 import AdminImport from '@/components/AdminImport'
 import AdminScheduleView from '@/components/AdminScheduleView'
+import AdminAgeGroupList from '@/components/AdminAgeGroupList'
 import { createClient } from '@/lib/supabase'
 import type { AgeGroup, Day, Match, Team, Tournament } from '@/lib/types'
 
@@ -42,6 +43,8 @@ export default function AdminPage() {
   const [view, setView] = useState<AdminView>('matches')
   const [showTournamentManager, setShowTournamentManager] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showSchedule, setShowSchedule] = useState(false)
+  const [showAgeGroups, setShowAgeGroups] = useState(false)
 
   const loadTournaments = useCallback(async () => {
     setLoadingTournaments(true)
@@ -85,35 +88,31 @@ export default function AdminPage() {
     }
   }, [tournamentId])
 
-  useEffect(() => {
-    let cancelled = false
-    async function loadGroups() {
-      if (!tournamentId) {
-        setAgeGroups([])
-        setLoadingGroups(false)
-        return
-      }
-      setLoadingGroups(true)
-      const { data, error } = await supabase
-        .from('age_groups')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .order('display_order', { ascending: true })
-
-      if (cancelled) return
-      if (error) {
-        toast.error(`Could not load age groups: ${error.message}`)
-        setLoadingGroups(false)
-        return
-      }
-      setAgeGroups(data ?? [])
+  const loadAgeGroups = useCallback(async () => {
+    if (!tournamentId) {
+      setAgeGroups([])
       setLoadingGroups(false)
+      return
     }
-    loadGroups()
-    return () => {
-      cancelled = true
+    setLoadingGroups(true)
+    const { data, error } = await supabase
+      .from('age_groups')
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .order('display_order', { ascending: true })
+
+    if (error) {
+      toast.error(`Could not load age groups: ${error.message}`)
+      setLoadingGroups(false)
+      return
     }
+    setAgeGroups(data ?? [])
+    setLoadingGroups(false)
   }, [supabase, tournamentId])
+
+  useEffect(() => {
+    loadAgeGroups()
+  }, [loadAgeGroups])
 
   const groupsForDay = useMemo(
     () => ageGroups.filter((g) => g.day === day),
@@ -263,6 +262,8 @@ export default function AdminPage() {
             onClick={() => {
               setShowTournamentManager((s) => !s)
               setShowImport(false)
+              setShowSchedule(false)
+              setShowAgeGroups(false)
             }}
             className={
               showTournamentManager
@@ -275,8 +276,26 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={() => {
+              setShowAgeGroups((s) => !s)
+              setShowTournamentManager(false)
+              setShowImport(false)
+              setShowSchedule(false)
+            }}
+            className={
+              showAgeGroups
+                ? 'rounded-md border border-mk-red bg-mk-red px-3 py-1.5 text-sm font-semibold text-white shadow-sm'
+                : 'rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+            }
+          >
+            {showAgeGroups ? 'Back to scoring' : 'Manage age groups'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
               setShowImport((s) => !s)
               setShowTournamentManager(false)
+              setShowSchedule(false)
+              setShowAgeGroups(false)
             }}
             className={
               showImport
@@ -285,6 +304,22 @@ export default function AdminPage() {
             }
           >
             {showImport ? 'Back to scoring' : 'Bulk import'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowSchedule((s) => !s)
+              setShowTournamentManager(false)
+              setShowImport(false)
+              setShowAgeGroups(false)
+            }}
+            className={
+              showSchedule
+                ? 'rounded-md border border-mk-red bg-mk-red px-3 py-1.5 text-sm font-semibold text-white shadow-sm'
+                : 'rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+            }
+          >
+            {showSchedule ? 'Back to scoring' : 'Schedule'}
           </button>
           <button
             type="button"
@@ -313,6 +348,26 @@ export default function AdminPage() {
             onChanged={loadTournaments}
           />
         </section>
+      ) : showAgeGroups ? (
+        <section className="px-4 pt-5">
+          {tournamentId &&
+          tournaments.find((t) => t.id === tournamentId) ? (
+            <AdminAgeGroupList
+              tournament={tournaments.find((t) => t.id === tournamentId)!}
+              ageGroups={ageGroups}
+              onChanged={() => {
+                loadAgeGroups()
+                loadMatches()
+                loadDayMatches()
+              }}
+              onClose={() => setShowAgeGroups(false)}
+            />
+          ) : (
+            <p className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+              Select a tournament before managing age groups.
+            </p>
+          )}
+        </section>
       ) : showImport ? (
         <section className="px-4 pt-5">
           {tournamentId &&
@@ -329,6 +384,22 @@ export default function AdminPage() {
           ) : (
             <p className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
               Select a tournament before importing.
+            </p>
+          )}
+        </section>
+      ) : showSchedule ? (
+        <section className="px-4 pt-5">
+          {tournamentId &&
+          tournaments.find((t) => t.id === tournamentId) ? (
+            <AdminScheduleView
+              tournament={tournaments.find((t) => t.id === tournamentId)!}
+              ageGroups={ageGroups}
+              onClose={() => setShowSchedule(false)}
+              onTournamentChanged={loadTournaments}
+            />
+          ) : (
+            <p className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+              Select a tournament to view its schedule.
             </p>
           )}
         </section>
@@ -446,6 +517,7 @@ export default function AdminPage() {
             ) : (
               <AdminTeamList
                 teams={teams}
+                ageGroupId={currentGroup.id}
                 ageGroupName={currentGroup.name}
                 onSaved={handleSaved}
               />

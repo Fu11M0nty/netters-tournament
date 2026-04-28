@@ -7,7 +7,8 @@ import TeamLogo from './TeamLogo'
 import type { Team } from '@/lib/types'
 
 interface TeamEditFormProps {
-  team: Team
+  team?: Team
+  ageGroupId: string
   ageGroupName: string
   onSave: () => void
   onCancel: () => void
@@ -18,14 +19,16 @@ const MAX_LOGO_BYTES = 2 * 1024 * 1024 // 2 MB
 
 export default function TeamEditForm({
   team,
+  ageGroupId,
   ageGroupName,
   onSave,
   onCancel,
 }: TeamEditFormProps) {
-  const [name, setName] = useState(team.name)
-  const [shortName, setShortName] = useState(team.short_name ?? '')
-  const [color, setColor] = useState(team.color ?? '#52525b')
-  const [logoUrl, setLogoUrl] = useState<string | null>(team.logo_url)
+  const isCreate = !team
+  const [name, setName] = useState(team?.name ?? '')
+  const [shortName, setShortName] = useState(team?.short_name ?? '')
+  const [color, setColor] = useState(team?.color ?? '#52525b')
+  const [logoUrl, setLogoUrl] = useState<string | null>(team?.logo_url ?? null)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,8 +38,9 @@ export default function TeamEditForm({
   const submitDisabled = saving || uploading || name.trim() === ''
 
   const previewTeam: Team = {
-    ...team,
-    name: name || team.name,
+    id: team?.id ?? 'new',
+    age_group_id: ageGroupId,
+    name: name || team?.name || 'New team',
     short_name: shortName || null,
     color,
     logo_url: logoUrl,
@@ -59,7 +63,7 @@ export default function TeamEditForm({
 
     setUploading(true)
     const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
-    const path = `${team.id}/${Date.now()}.${ext}`
+    const path = `${team?.id ?? 'pending'}/${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
       .from(LOGO_BUCKET)
@@ -97,16 +101,22 @@ export default function TeamEditForm({
       return
     }
 
+    const payload = {
+      name: name.trim(),
+      short_name: shortName.trim() === '' ? null : shortName.trim(),
+      color,
+      logo_url: logoUrl,
+      age_group_id: ageGroupId,
+    }
+
     setSaving(true)
-    const { error } = await supabase
-      .from('teams')
-      .update({
-        name: name.trim(),
-        short_name: shortName.trim() === '' ? null : shortName.trim(),
-        color,
-        logo_url: logoUrl,
-      })
-      .eq('id', team.id)
+    const { data, error } = isCreate
+      ? await supabase.from('teams').insert(payload).select()
+      : await supabase
+          .from('teams')
+          .update(payload)
+          .eq('id', team!.id)
+          .select()
 
     setSaving(false)
 
@@ -114,8 +124,16 @@ export default function TeamEditForm({
       toast.error(`Could not save: ${error.message}`)
       return
     }
+    if (!data || data.length === 0) {
+      toast.error(
+        isCreate
+          ? 'Insert blocked by RLS — check teams_auth_insert policy.'
+          : 'Update blocked by RLS — check teams_auth_update policy.'
+      )
+      return
+    }
 
-    toast.success('Team saved')
+    toast.success(isCreate ? 'Team added' : 'Team saved')
     onSave()
   }
 
@@ -138,7 +156,7 @@ export default function TeamEditForm({
             id="team-edit-title"
             className="mt-1 text-base font-bold text-zinc-900 dark:text-zinc-50"
           >
-            Edit team
+            {isCreate ? 'Add team' : 'Edit team'}
           </h2>
         </header>
 

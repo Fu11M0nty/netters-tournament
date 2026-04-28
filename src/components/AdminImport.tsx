@@ -13,7 +13,18 @@ interface AdminImportProps {
   onImported: () => void
 }
 
-type Mode = 'teams' | 'players'
+type Mode = 'age_groups' | 'teams' | 'players'
+
+interface AgeGroupRow {
+  name: string
+  slug: string
+  day: string
+  display_order: number
+  gender?: string
+  skill_level?: string
+  rowNo: number
+  errors: string[]
+}
 
 interface TeamRow {
   name: string
@@ -35,6 +46,8 @@ interface PlayerRow {
   errors: string[]
 }
 
+const AGE_GROUP_TEMPLATE =
+  'name,slug,day,display_order,gender,skill_level\nUnder 11\'s,under-11s,saturday,1,Mixed,Club\nUnder 13\'s,under-13s,saturday,2,Mixed,Performance\n'
 const TEAM_TEMPLATE = 'name,short_name,color\nSparks U13,SPK,#e11d2d\nMK Netters,MKN,#0b1221\n'
 const PLAYER_TEMPLATE =
   'name,team,dob,registration_no,notes\nJane Smith,Sparks U13,2010-05-12,EN-12345,\nAlex Lee,MK Netters,2010-09-03,EN-12346,Captain\n'
@@ -45,7 +58,7 @@ export default function AdminImport({
   onClose,
   onImported,
 }: AdminImportProps) {
-  const [mode, setMode] = useState<Mode>('teams')
+  const [mode, setMode] = useState<Mode>('age_groups')
   const [csvText, setCsvText] = useState('')
   const [targetAgeGroup, setTargetAgeGroup] = useState<string>(
     ageGroups[0]?.id ?? ''
@@ -86,6 +99,39 @@ export default function AdminImport({
     for (const t of teams) map.set(t.name.toLowerCase().trim(), t)
     return map
   }, [teams])
+
+  const ageGroupRows = useMemo<AgeGroupRow[]>(() => {
+    if (mode !== 'age_groups' || !parsed) return []
+    return parsed.rows.map((row, i) => {
+      const errors: string[] = []
+      const name = row['name']?.trim() ?? ''
+      const slug = (row['slug']?.trim() ?? '').toLowerCase()
+      const day = (row['day']?.trim() ?? '').toLowerCase()
+      const orderRaw = row['display_order']?.trim() ?? ''
+      const order = Number(orderRaw)
+      if (!name) errors.push('Name is required')
+      if (!slug) errors.push('Slug is required')
+      if (slug && !/^[a-z0-9-]+$/.test(slug)) {
+        errors.push('Slug can only use lowercase letters, numbers, hyphens')
+      }
+      if (day !== 'saturday' && day !== 'sunday') {
+        errors.push('Day must be "saturday" or "sunday"')
+      }
+      if (orderRaw === '' || !Number.isInteger(order)) {
+        errors.push('Display order must be a whole number')
+      }
+      return {
+        name,
+        slug,
+        day,
+        display_order: order,
+        gender: row['gender']?.trim() || undefined,
+        skill_level: row['skill_level']?.trim() || undefined,
+        rowNo: i + 2,
+        errors,
+      }
+    })
+  }, [mode, parsed])
 
   const teamRows = useMemo<TeamRow[]>(() => {
     if (mode !== 'teams' || !parsed) return []
@@ -136,12 +182,50 @@ export default function AdminImport({
     })
   }, [mode, parsed, teamsByName])
 
+  const validAgeGroupRows = ageGroupRows.filter((r) => r.errors.length === 0)
   const validTeamRows = teamRows.filter((r) => r.errors.length === 0)
   const validPlayerRows = playerRows.filter((r) => r.errors.length === 0)
+  const ageGroupErrorCount = ageGroupRows.length - validAgeGroupRows.length
   const teamErrorCount = teamRows.length - validTeamRows.length
   const playerErrorCount = playerRows.length - validPlayerRows.length
 
   async function handleImport() {
+    if (mode === 'age_groups') {
+      if (validAgeGroupRows.length === 0) {
+        toast.error('Nothing to import.')
+        return
+      }
+      setImporting(true)
+      const payload = validAgeGroupRows.map((r) => ({
+        tournament_id: tournament.id,
+        name: r.name,
+        slug: r.slug,
+        day: r.day,
+        display_order: r.display_order,
+        gender: r.gender ?? null,
+        skill_level: r.skill_level ?? null,
+      }))
+      const { data, error } = await supabase
+        .from('age_groups')
+        .insert(payload)
+        .select()
+      setImporting(false)
+      if (error) {
+        toast.error(`Import failed: ${error.message}`)
+        return
+      }
+      if (!data || data.length === 0) {
+        toast.error('Insert blocked by RLS — check age_groups_auth_insert.')
+        return
+      }
+      toast.success(
+        `Imported ${data.length} age group${data.length === 1 ? '' : 's'}`
+      )
+      setCsvText('')
+      onImported()
+      return
+    }
+
     if (mode === 'teams') {
       if (validTeamRows.length === 0) {
         toast.error('Nothing to import.')
@@ -206,9 +290,11 @@ export default function AdminImport({
   }
 
   const headerHint =
-    mode === 'teams'
-      ? 'name (required) · short_name · color (#RRGGBB)'
-      : 'name (required) · team (required, must match an existing team in this tournament) · dob (YYYY-MM-DD) · registration_no · notes'
+    mode === 'age_groups'
+      ? 'name · slug · day (saturday|sunday) · display_order · gender · skill_level'
+      : mode === 'teams'
+        ? 'name (required) · short_name · color (#RRGGBB)'
+        : 'name (required) · team (required, must match an existing team in this tournament) · dob (YYYY-MM-DD) · registration_no · notes'
 
   return (
     <div className="space-y-4">
@@ -230,8 +316,14 @@ export default function AdminImport({
         aria-label="Import mode"
         className="inline-flex rounded-md border border-zinc-300 bg-white p-0.5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
       >
-        {(['teams', 'players'] as Mode[]).map((m) => {
+        {(['age_groups', 'teams', 'players'] as Mode[]).map((m) => {
           const active = mode === m
+          const label =
+            m === 'age_groups'
+              ? 'Age groups'
+              : m === 'teams'
+                ? 'Teams'
+                : 'Players'
           return (
             <button
               key={m}
@@ -248,7 +340,7 @@ export default function AdminImport({
                   : 'rounded px-3 py-1 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
               }
             >
-              {m === 'teams' ? 'Teams' : 'Players'}
+              {label}
             </button>
           )
         })}
@@ -278,7 +370,13 @@ export default function AdminImport({
         <button
           type="button"
           onClick={() =>
-            setCsvText(mode === 'teams' ? TEAM_TEMPLATE : PLAYER_TEMPLATE)
+            setCsvText(
+              mode === 'age_groups'
+                ? AGE_GROUP_TEMPLATE
+                : mode === 'teams'
+                  ? TEAM_TEMPLATE
+                  : PLAYER_TEMPLATE
+            )
           }
           className="mt-2 rounded-md border border-zinc-300 bg-white px-2 py-1 text-[11px] font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
         >
@@ -302,13 +400,31 @@ export default function AdminImport({
         <div className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-              {mode === 'teams' ? 'Teams' : 'Players'} preview ·{' '}
-              {parsed.rows.length} row{parsed.rows.length === 1 ? '' : 's'}
+              {mode === 'age_groups'
+                ? 'Age groups'
+                : mode === 'teams'
+                  ? 'Teams'
+                  : 'Players'}{' '}
+              preview · {parsed.rows.length} row
+              {parsed.rows.length === 1 ? '' : 's'}
             </span>
-            {(mode === 'teams' ? teamErrorCount : playerErrorCount) > 0 && (
+            {(mode === 'age_groups'
+              ? ageGroupErrorCount
+              : mode === 'teams'
+                ? teamErrorCount
+                : playerErrorCount) > 0 && (
               <span className="text-red-700 dark:text-red-400">
-                {(mode === 'teams' ? teamErrorCount : playerErrorCount)} row
-                {(mode === 'teams' ? teamErrorCount : playerErrorCount) === 1
+                {mode === 'age_groups'
+                  ? ageGroupErrorCount
+                  : mode === 'teams'
+                    ? teamErrorCount
+                    : playerErrorCount}{' '}
+                row
+                {(mode === 'age_groups'
+                  ? ageGroupErrorCount
+                  : mode === 'teams'
+                    ? teamErrorCount
+                    : playerErrorCount) === 1
                   ? ''
                   : 's'}{' '}
                 will be skipped
@@ -325,7 +441,14 @@ export default function AdminImport({
                   <th className="px-2 py-1 font-semibold text-zinc-600 dark:text-zinc-400">
                     Status
                   </th>
-                  {mode === 'teams' ? (
+                  {mode === 'age_groups' ? (
+                    <>
+                      <th className="px-2 py-1 font-semibold">Name</th>
+                      <th className="px-2 py-1 font-semibold">Slug</th>
+                      <th className="px-2 py-1 font-semibold">Day</th>
+                      <th className="px-2 py-1 font-semibold">Order</th>
+                    </>
+                  ) : mode === 'teams' ? (
                     <>
                       <th className="px-2 py-1 font-semibold">Name</th>
                       <th className="px-2 py-1 font-semibold">Short</th>
@@ -342,7 +465,12 @@ export default function AdminImport({
                 </tr>
               </thead>
               <tbody>
-                {(mode === 'teams' ? teamRows : playerRows).map((r, i) => (
+                {(mode === 'age_groups'
+                  ? ageGroupRows
+                  : mode === 'teams'
+                    ? teamRows
+                    : playerRows
+                ).map((r, i) => (
                   <tr
                     key={i}
                     className={
@@ -355,7 +483,18 @@ export default function AdminImport({
                     <td className="px-2 py-1">
                       {r.errors.length > 0 ? r.errors.join(' · ') : 'OK'}
                     </td>
-                    {mode === 'teams' ? (
+                    {mode === 'age_groups' ? (
+                      <>
+                        <td className="px-2 py-1">{(r as AgeGroupRow).name}</td>
+                        <td className="px-2 py-1 font-mono">
+                          {(r as AgeGroupRow).slug}
+                        </td>
+                        <td className="px-2 py-1">{(r as AgeGroupRow).day}</td>
+                        <td className="px-2 py-1 tabular-nums">
+                          {(r as AgeGroupRow).display_order}
+                        </td>
+                      </>
+                    ) : mode === 'teams' ? (
                       <>
                         <td className="px-2 py-1">{(r as TeamRow).name}</td>
                         <td className="px-2 py-1">
@@ -393,15 +532,21 @@ export default function AdminImport({
           onClick={handleImport}
           disabled={
             importing ||
-            (mode === 'teams' ? validTeamRows.length : validPlayerRows.length) === 0
+            (mode === 'age_groups'
+              ? validAgeGroupRows.length
+              : mode === 'teams'
+                ? validTeamRows.length
+                : validPlayerRows.length) === 0
           }
           className="rounded-md bg-mk-red px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-mk-red-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
           {importing
             ? 'Importing…'
-            : mode === 'teams'
-              ? `Import ${validTeamRows.length} team${validTeamRows.length === 1 ? '' : 's'}`
-              : `Import ${validPlayerRows.length} player${validPlayerRows.length === 1 ? '' : 's'}`}
+            : mode === 'age_groups'
+              ? `Import ${validAgeGroupRows.length} age group${validAgeGroupRows.length === 1 ? '' : 's'}`
+              : mode === 'teams'
+                ? `Import ${validTeamRows.length} team${validTeamRows.length === 1 ? '' : 's'}`
+                : `Import ${validPlayerRows.length} player${validPlayerRows.length === 1 ? '' : 's'}`}
         </button>
       </div>
     </div>

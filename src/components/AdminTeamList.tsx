@@ -8,16 +8,19 @@ import type { Team } from '@/lib/types'
 
 interface AdminTeamListProps {
   teams: Team[]
+  ageGroupId: string
   ageGroupName: string
   onSaved: () => void
 }
 
 export default function AdminTeamList({
   teams,
+  ageGroupId,
   ageGroupName,
   onSaved,
 }: AdminTeamListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   const [playersTeamId, setPlayersTeamId] = useState<string | null>(null)
 
   const sorted = useMemo(
@@ -32,16 +35,24 @@ export default function AdminTeamList({
     ? sorted.find((t) => t.id === playersTeamId) ?? null
     : null
 
-  if (sorted.length === 0) {
-    return (
-      <p className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
-        No teams in this age group.
-      </p>
-    )
-  }
-
   return (
     <>
+      <div className="mb-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="rounded-md bg-mk-red px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-mk-red-dark"
+        >
+          Add team
+        </button>
+      </div>
+      {sorted.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+          No teams in this age group yet. Click&nbsp;
+          <span className="font-semibold">Add team</span> to start building the
+          roster.
+        </p>
+      ) : (
       <ul className="divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950">
         {sorted.map((team) => (
           <li
@@ -87,10 +98,23 @@ export default function AdminTeamList({
           </li>
         ))}
       </ul>
+      )}
 
+      {creating && (
+        <TeamEditForm
+          ageGroupId={ageGroupId}
+          ageGroupName={ageGroupName}
+          onSave={() => {
+            setCreating(false)
+            onSaved()
+          }}
+          onCancel={() => setCreating(false)}
+        />
+      )}
       {editingTeam && (
         <TeamEditForm
           team={editingTeam}
+          ageGroupId={ageGroupId}
           ageGroupName={ageGroupName}
           onSave={() => {
             setEditingId(null)
