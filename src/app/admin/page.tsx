@@ -149,6 +149,7 @@ export default function AdminPage() {
       .from('matches')
       .select('*')
       .in('age_group_id', groupIdsForDay)
+      .is('deleted_at', null)
     if (error) {
       toast.error(`Could not load day schedule: ${error.message}`)
       return
@@ -172,11 +173,13 @@ export default function AdminPage() {
         .from('teams')
         .select('*')
         .eq('age_group_id', currentGroupId)
+        .is('deleted_at', null)
         .order('name', { ascending: true }),
       supabase
         .from('matches')
         .select('*')
         .eq('age_group_id', currentGroupId)
+        .is('deleted_at', null)
         .order('kickoff_time', { ascending: true }),
     ])
 

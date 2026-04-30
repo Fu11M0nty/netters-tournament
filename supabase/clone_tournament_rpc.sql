@@ -92,12 +92,12 @@ begin
     home_score, away_score, court, kickoff_time, status,
     home_umpire_no_show, away_umpire_no_show,
     home_late_minutes, away_late_minutes,
-    home_no_show, away_no_show, scoresheet_url
+    home_no_show, away_no_show, scoresheet_url, round_number
   )
   select
     agm.mapped_id, htm.mapped_id, atm.mapped_id,
     null, null, ma.court, ma.kickoff_time + date_offset, 'scheduled',
-    false, false, 0, 0, false, false, null
+    false, false, 0, 0, false, false, null, ma.round_number
   from matches ma
   join _ag_map agm on agm.old_id = ma.age_group_id
   join _team_map htm on htm.old_id = ma.home_team_id

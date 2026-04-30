@@ -66,11 +66,13 @@ export default async function AgeGroupPage({ params, searchParams }: Props) {
       .from('teams')
       .select('*')
       .eq('age_group_id', currentGroup.id)
+      .is('deleted_at', null)
       .order('name', { ascending: true }),
     supabase
       .from('matches')
       .select('*')
       .eq('age_group_id', currentGroup.id)
+      .is('deleted_at', null)
       .order('kickoff_time', { ascending: true }),
   ])
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase'
 import { parseCsv } from '@/lib/csv'
+import { ensureRoundRobinMatches } from '@/lib/matches'
 import type { AgeGroup, Team, Tournament } from '@/lib/types'
 
 interface AdminImportProps {
@@ -80,6 +81,7 @@ export default function AdminImport({
         .from('teams')
         .select('*')
         .in('age_group_id', ageGroupIds)
+        .is('deleted_at', null)
       if (cancelled) return
       setTeams((data ?? []) as Team[])
     }
@@ -251,7 +253,27 @@ export default function AdminImport({
         toast.error('Insert blocked by RLS. Check teams_auth_insert policy.')
         return
       }
-      toast.success(`Imported ${data.length} team${data.length === 1 ? '' : 's'}`)
+
+      // Auto-generate round-robin fixtures for every affected age group.
+      const affectedAgeGroupIds = Array.from(
+        new Set(validTeamRows.map((r) => r.age_group_id))
+      )
+      let createdMatches = 0
+      for (const agId of affectedAgeGroupIds) {
+        const r = await ensureRoundRobinMatches(supabase, agId)
+        if (r.error) {
+          toast.error(`Fixture generation failed: ${r.error}`)
+        } else {
+          createdMatches += r.created
+        }
+      }
+
+      toast.success(
+        `Imported ${data.length} team${data.length === 1 ? '' : 's'}` +
+          (createdMatches > 0
+            ? ` · ${createdMatches} fixture${createdMatches === 1 ? '' : 's'} created`
+            : '')
+      )
       setCsvText('')
       onImported()
       return

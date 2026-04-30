@@ -59,6 +59,12 @@ export default function FixtureCard({
       </div>
 
       <div className="flex items-center justify-center gap-2 border-t border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium text-zinc-500 dark:border-zinc-900 dark:bg-zinc-900/50 dark:text-zinc-400">
+        {match.round_number && (
+          <>
+            <span className="font-bold text-zinc-700 dark:text-zinc-300">Round {match.round_number}</span>
+            <span aria-hidden="true">·</span>
+          </>
+        )}
         <span>{date}</span>
         {match.court && (
           <>

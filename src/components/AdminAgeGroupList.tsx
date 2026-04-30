@@ -4,6 +4,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import AgeGroupEditForm from './AgeGroupEditForm'
 import { createClient } from '@/lib/supabase'
+import { describeMatchRules } from '@/lib/matchRules'
 import type { AgeGroup, Tournament } from '@/lib/types'
 
 interface AdminAgeGroupListProps {
@@ -119,6 +120,16 @@ export default function AdminAgeGroupList({
                 </div>
                 <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                   /{g.slug} · order {g.display_order}
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <span className="font-semibold">
+                    {g.match_format === 'continuous'
+                      ? 'Continuous'
+                      : g.match_format === 'halves'
+                        ? '2 halves'
+                        : '4 quarters'}
+                  </span>{' '}
+                  — {describeMatchRules(g)}
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">

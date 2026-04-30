@@ -7,6 +7,7 @@ drop table if exists schedule_events cascade;
 drop table if exists players cascade;
 drop table if exists matches cascade;
 drop table if exists teams cascade;
+drop table if exists courts cascade;
 drop table if exists age_groups cascade;
 drop table if exists tournaments cascade;
 
@@ -39,13 +40,45 @@ create table age_groups (
   display_order int  not null,
   gender        text,
   skill_level   text,
+  match_format  text not null default 'continuous',
+  period_minutes int not null default 12,
+  break_q1_q2_minutes int not null default 0,
+  break_half_time_minutes int not null default 0,
+  break_q3_q4_minutes int not null default 0,
   created_at    timestamptz not null default now(),
   unique (tournament_id, slug, day),
   unique (tournament_id, name, day),
-  check (day in ('saturday', 'sunday'))
+  check (day in ('saturday', 'sunday')),
+  check (match_format in ('continuous', 'halves', 'quarters')),
+  check (period_minutes > 0),
+  check (break_q1_q2_minutes >= 0),
+  check (break_half_time_minutes >= 0),
+  check (break_q3_q4_minutes >= 0)
 );
 
 create index age_groups_tournament_id_idx on age_groups(tournament_id);
+
+-- ---------------------------------------------------------------------------
+-- courts (per-tournament court configuration with start/end times)
+-- ---------------------------------------------------------------------------
+create table courts (
+  id            uuid primary key default gen_random_uuid(),
+  tournament_id uuid not null references tournaments(id) on delete cascade,
+  name          text not null,
+  day           text not null default 'saturday',
+  display_order int  not null default 0,
+  start_time    text not null default '08:00',
+  end_time      text not null default '17:00',
+  created_at    timestamptz not null default now(),
+  unique (tournament_id, day, name),
+  check (day in ('saturday', 'sunday')),
+  check (start_time ~ '^[0-2][0-9]:[0-5][0-9]$'),
+  check (end_time   ~ '^[0-2][0-9]:[0-5][0-9]$'),
+  check (end_time > start_time)
+);
+
+create index courts_tournament_id_idx on courts(tournament_id);
+create index courts_tournament_day_idx on courts(tournament_id, day);
 
 -- ---------------------------------------------------------------------------
 -- teams
@@ -57,10 +90,12 @@ create table teams (
   color        text,
   logo_url     text,
   age_group_id uuid not null references age_groups(id) on delete cascade,
+  deleted_at   timestamptz,
   created_at   timestamptz not null default now()
 );
 
 create index teams_age_group_id_idx on teams(age_group_id);
+create index teams_active_idx on teams(age_group_id) where deleted_at is null;
 
 -- ---------------------------------------------------------------------------
 -- matches
@@ -84,6 +119,8 @@ create table matches (
   scoresheet_url text,
   duration_minutes int not null default 12,
   is_planned    boolean not null default true,
+  round_number  int,
+  deleted_at    timestamptz,
   created_at    timestamptz not null default now(),
   check (home_team_id <> away_team_id),
   check (status in ('scheduled', 'completed')),
@@ -94,6 +131,7 @@ create table matches (
 
 create index matches_age_group_id_idx on matches(age_group_id);
 create index matches_kickoff_time_idx on matches(kickoff_time);
+create index matches_active_idx on matches(age_group_id) where deleted_at is null;
 
 -- ---------------------------------------------------------------------------
 -- players
@@ -135,6 +173,7 @@ create index schedule_events_start_time_idx    on schedule_events(start_time);
 -- ---------------------------------------------------------------------------
 alter table tournaments     enable row level security;
 alter table age_groups      enable row level security;
+alter table courts          enable row level security;
 alter table teams           enable row level security;
 alter table matches         enable row level security;
 alter table players         enable row level security;
@@ -147,6 +186,7 @@ create policy "teams_anon_select"           on teams           for select to ano
 create policy "matches_anon_select"         on matches         for select to anon          using (true);
 create policy "players_anon_select"         on players         for select to anon          using (true);
 create policy "schedule_events_anon_select" on schedule_events for select to anon          using (true);
+create policy "courts_anon_select"          on courts          for select to anon          using (true);
 
 -- Authenticated read (so the admin console also gets rows back)
 create policy "tournaments_auth_select"     on tournaments     for select to authenticated using (true);
@@ -155,6 +195,10 @@ create policy "teams_auth_select"           on teams           for select to aut
 create policy "matches_auth_select"         on matches         for select to authenticated using (true);
 create policy "players_auth_select"         on players         for select to authenticated using (true);
 create policy "schedule_events_auth_select" on schedule_events for select to authenticated using (true);
+create policy "courts_auth_select"          on courts          for select to authenticated using (true);
+create policy "courts_auth_insert"          on courts          for insert to authenticated with check (true);
+create policy "courts_auth_update"          on courts          for update to authenticated using (true) with check (true);
+create policy "courts_auth_delete"          on courts          for delete to authenticated using (true);
 
 -- Authenticated write (insert / update / delete) — used by the admin console
 create policy "tournaments_auth_insert"     on tournaments     for insert to authenticated with check (true);
@@ -180,4 +224,3 @@ create policy "players_auth_delete"         on players         for delete to aut
 create policy "schedule_events_auth_insert" on schedule_events for insert to authenticated with check (true);
 create policy "schedule_events_auth_update" on schedule_events for update to authenticated using (true) with check (true);
 create policy "schedule_events_auth_delete" on schedule_events for delete to authenticated using (true);
-

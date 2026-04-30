@@ -26,7 +26,7 @@ begin
     home_umpire_no_show, away_umpire_no_show,
     home_late_minutes, away_late_minutes,
     home_no_show, away_no_show,
-    scoresheet_url, created_at, backed_up_at
+    scoresheet_url, round_number, created_at, backed_up_at
   )
   select
     id, age_group_id, home_team_id, away_team_id,
@@ -34,7 +34,7 @@ begin
     home_umpire_no_show, away_umpire_no_show,
     home_late_minutes, away_late_minutes,
     home_no_show, away_no_show,
-    scoresheet_url, created_at,
+    scoresheet_url, round_number, created_at,
     ts
   from matches;
 

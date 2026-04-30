@@ -67,8 +67,8 @@ export default async function TournamentLandingPage({ params }: Props) {
       .select('*')
       .eq('tournament_id', tournament.id)
       .order('display_order', { ascending: true }),
-    supabase.from('teams').select('*'),
-    supabase.from('matches').select('*'),
+    supabase.from('teams').select('*').is('deleted_at', null),
+    supabase.from('matches').select('*').is('deleted_at', null),
   ])
 
   const groups: AgeGroup[] = groupsRes.data ?? []

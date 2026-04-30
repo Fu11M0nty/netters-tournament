@@ -14,6 +14,8 @@ export interface Tournament {
   schedule_locked: boolean
 }
 
+export type MatchFormat = 'continuous' | 'halves' | 'quarters'
+
 export interface AgeGroup {
   id: string
   tournament_id: string
@@ -23,6 +25,21 @@ export interface AgeGroup {
   display_order: number
   gender: string | null
   skill_level: string | null
+  match_format: MatchFormat
+  period_minutes: number
+  break_q1_q2_minutes: number
+  break_half_time_minutes: number
+  break_q3_q4_minutes: number
+}
+
+export interface Court {
+  id: string
+  tournament_id: string
+  name: string
+  day: Day
+  display_order: number
+  start_time: string
+  end_time: string
 }
 
 export interface Player {
@@ -53,6 +70,7 @@ export interface Team {
   color: string | null
   logo_url: string | null
   age_group_id: string
+  deleted_at: string | null
 }
 
 export type MatchStatus = 'scheduled' | 'completed'
@@ -76,6 +94,8 @@ export interface Match {
   scoresheet_url: string | null
   duration_minutes: number
   is_planned: boolean
+  deleted_at: string | null
+  round_number: number | null
 }
 
 export interface StandingRow {

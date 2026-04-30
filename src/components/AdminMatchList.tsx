@@ -183,6 +183,11 @@ export default function AdminMatchList({
               </div>
 
               <div className="flex-1 text-sm text-zinc-900 dark:text-zinc-100">
+                {match.round_number && (
+                  <span className="mr-2 rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                    Round {match.round_number}
+                  </span>
+                )}
                 {isDuplicate && (
                   <span className="mr-2 rounded-sm bg-fuchsia-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                     Duplicate

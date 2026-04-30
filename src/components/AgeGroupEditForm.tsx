@@ -4,7 +4,9 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase'
 import { slugify } from '@/lib/slugify'
-import type { AgeGroup, Day } from '@/lib/types'
+import { totalMatchMinutes } from '@/lib/matchRules'
+import { applyMatchRulesToGroup } from '@/lib/matches'
+import type { AgeGroup, Day, MatchFormat } from '@/lib/types'
 
 interface AgeGroupEditFormProps {
   mode: 'create' | 'edit'
@@ -34,7 +36,35 @@ export default function AgeGroupEditForm({
   )
   const [gender, setGender] = useState(ageGroup?.gender ?? '')
   const [skillLevel, setSkillLevel] = useState(ageGroup?.skill_level ?? '')
+  const [matchFormat, setMatchFormat] = useState<MatchFormat>(
+    ageGroup?.match_format ?? 'continuous'
+  )
+  const [periodMinutes, setPeriodMinutes] = useState<string>(
+    String(ageGroup?.period_minutes ?? 12)
+  )
+  const [breakQ1Q2, setBreakQ1Q2] = useState<string>(
+    String(ageGroup?.break_q1_q2_minutes ?? 0)
+  )
+  const [breakHalfTime, setBreakHalfTime] = useState<string>(
+    String(ageGroup?.break_half_time_minutes ?? 0)
+  )
+  const [breakQ3Q4, setBreakQ3Q4] = useState<string>(
+    String(ageGroup?.break_q3_q4_minutes ?? 0)
+  )
   const [saving, setSaving] = useState(false)
+
+  const parsedPeriod = Math.max(1, Math.floor(Number(periodMinutes) || 0))
+  const parsedBreakQ1Q2 = Math.max(0, Math.floor(Number(breakQ1Q2) || 0))
+  const parsedBreakHalf = Math.max(0, Math.floor(Number(breakHalfTime) || 0))
+  const parsedBreakQ3Q4 = Math.max(0, Math.floor(Number(breakQ3Q4) || 0))
+
+  const totalMinutes = totalMatchMinutes({
+    match_format: matchFormat,
+    period_minutes: parsedPeriod,
+    break_q1_q2_minutes: parsedBreakQ1Q2,
+    break_half_time_minutes: parsedBreakHalf,
+    break_q3_q4_minutes: parsedBreakQ3Q4,
+  })
 
   const supabase = createClient()
 
@@ -70,6 +100,14 @@ export default function AgeGroupEditForm({
       display_order: order,
       gender: gender.trim() === '' ? null : gender.trim(),
       skill_level: skillLevel.trim() === '' ? null : skillLevel.trim(),
+      match_format: matchFormat,
+      period_minutes: parsedPeriod,
+      break_q1_q2_minutes:
+        matchFormat === 'quarters' ? parsedBreakQ1Q2 : 0,
+      break_half_time_minutes:
+        matchFormat === 'continuous' ? 0 : parsedBreakHalf,
+      break_q3_q4_minutes:
+        matchFormat === 'quarters' ? parsedBreakQ3Q4 : 0,
     }
 
     setSaving(true)
@@ -95,7 +133,22 @@ export default function AgeGroupEditForm({
       )
       return
     }
-    toast.success(mode === 'create' ? 'Age group created' : 'Age group saved')
+
+    // Push the new total duration to every existing match in this group so the
+    // scheduler block sizes stay aligned with the age-group rules.
+    const savedId = (data[0] as AgeGroup).id
+    const result = await applyMatchRulesToGroup(supabase, savedId, totalMinutes)
+    if (result.error) {
+      toast.error(`Saved, but rules not pushed to matches: ${result.error}`)
+    } else if (result.updated > 0) {
+      toast.success(
+        `Age group saved · ${result.updated} match${
+          result.updated === 1 ? '' : 'es'
+        } updated to ${totalMinutes} min`
+      )
+    } else {
+      toast.success(mode === 'create' ? 'Age group created' : 'Age group saved')
+    }
     onSaved()
   }
 
@@ -233,6 +286,131 @@ export default function AgeGroupEditForm({
                 className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
               />
             </div>
+          </div>
+
+          <div className="space-y-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Match rules
+              </p>
+              <p className="text-[10px] tabular-nums text-zinc-500 dark:text-zinc-400">
+                Total{' '}
+                <span className="font-bold text-zinc-900 dark:text-zinc-50">
+                  {totalMinutes}
+                </span>{' '}
+                min
+              </p>
+            </div>
+            <fieldset className="grid grid-cols-3 gap-1 rounded-md border border-zinc-300 bg-white p-0.5 text-xs dark:border-zinc-700 dark:bg-zinc-900">
+              {(['continuous', 'halves', 'quarters'] as MatchFormat[]).map(
+                (f) => {
+                  const label =
+                    f === 'continuous'
+                      ? 'Continuous'
+                      : f === 'halves'
+                        ? '2 halves'
+                        : '4 quarters'
+                  const active = matchFormat === f
+                  return (
+                    <label
+                      key={f}
+                      className={
+                        active
+                          ? 'cursor-pointer rounded bg-mk-red px-2 py-1.5 text-center font-semibold text-white'
+                          : 'cursor-pointer rounded px-2 py-1.5 text-center font-semibold text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name="match-format"
+                        value={f}
+                        checked={active}
+                        onChange={() => setMatchFormat(f)}
+                        className="sr-only"
+                      />
+                      {label}
+                    </label>
+                  )
+                }
+              )}
+            </fieldset>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                {matchFormat === 'continuous'
+                  ? 'Total minutes'
+                  : matchFormat === 'halves'
+                    ? 'Minutes per half'
+                    : 'Minutes per quarter'}
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={periodMinutes}
+                  onChange={(e) => setPeriodMinutes(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+              </label>
+              {matchFormat === 'halves' && (
+                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  Half-time break (min)
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={breakHalfTime}
+                    onChange={(e) => setBreakHalfTime(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  />
+                </label>
+              )}
+            </div>
+
+            {matchFormat === 'quarters' && (
+              <div className="grid grid-cols-3 gap-3">
+                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  Q1 → Q2 (min)
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={breakQ1Q2}
+                    onChange={(e) => setBreakQ1Q2(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  />
+                </label>
+                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  Half-time (min)
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={breakHalfTime}
+                    onChange={(e) => setBreakHalfTime(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  />
+                </label>
+                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  Q3 → Q4 (min)
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={breakQ3Q4}
+                    onChange={(e) => setBreakQ3Q4(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm tabular-nums text-zinc-900 shadow-sm focus:border-mk-red focus:outline-none focus:ring-1 focus:ring-mk-red dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  />
+                </label>
+              </div>
+            )}
+
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+              {matchFormat === 'continuous'
+                ? `One straight period of ${parsedPeriod} min — no breaks.`
+                : matchFormat === 'halves'
+                  ? `2 × ${parsedPeriod} min play + ${parsedBreakHalf} min half-time = ${totalMinutes} min total.`
+                  : `4 × ${parsedPeriod} min play + breaks (${parsedBreakQ1Q2} / ${parsedBreakHalf} / ${parsedBreakQ3Q4}) = ${totalMinutes} min total.`}
+            </p>
           </div>
 
           <div className="flex gap-2 pt-2">
